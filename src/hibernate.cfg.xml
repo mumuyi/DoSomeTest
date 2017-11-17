@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+
+	<session-factory>
+
+		<!-- Database connection settings -->
+		<!-- 选择数据库驱动，如果是mysql的话，改成com.mysql.jdbc.Driver -->
+		<property name="connection.driver_class">com.mysql.jdbc.Driver</property>
+		<property name="connection.url">jdbc:mysql://localhost/rosf</property>
+		<property name="connection.username">root</property>
+		<property name="connection.password">root</property>
+
+		<!-- JDBC connection pool (use the built-in) -->
+		<property name="connection.pool_size">1</property>
+
+		<!-- SQL dialect -->
+		<!-- 选择sql语言，如果是mysql的话，改成org.hibernate.dialect.MySQLDialect -->
+		<property name="dialect">org.hibernate.dialect.MySQLDialect</property>
+
+		<!-- Enable Hibernate's automatic session context management -->
+		<property name="current_session_context_class">thread</property>
+
+		<!-- Disable the second-level cache -->
+		<property name="cache.provider_class">org.hibernate.cache.NoCacheProvider</property>
+
+		<!-- Echo all executed SQL to stdout -->
+		<property name="show_sql">true</property>
+
+		<!-- Drop and re-create the database schema on startup -->
+		<!-- 写update只是更新操作，也可以写create， 这样写create的话程序运行的时候就会把数据库里的内容全部删除并且重新创建， 
+			当然，前提是数据库必须存在，因为hibernate只会创建表结构， 不会创建数据库，如果指定的数据库不存在，hibernate则会抛出异常 -->
+		<property name="hbm2ddl.auto">update</property>
+
+		<mapping resource="cn/nuaa/ai/entity/TrainData.hbm.xml"/>
+		<!-- 这里需要注意的是，如果你是使用Annotation的话，那就应该写成 <mapping class = "com.hzucmj.hibernate.Student" 
+			/> -->
+	</session-factory>
+
+</hibernate-configuration>

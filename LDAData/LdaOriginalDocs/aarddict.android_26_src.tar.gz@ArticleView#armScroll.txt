@@ -1,0 +1,4 @@
+@JavascriptInterface
+        public void armScroll() {
+            this.scrollToArmed = true;
+        }

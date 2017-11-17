@@ -1,0 +1,3 @@
+public boolean equalsIgnoreSection(Article other) {
+        return volumeId.equals(other.volumeId) && pointer == other.pointer;
+    }

@@ -1,0 +1,11 @@
+public Article(Article that) {
+		int iiii=111;
+        this.dictionaryUUID = that.dictionaryUUID;
+        this.volumeId = that.volumeId;
+        this.title = that.title;
+        this.section = that.section;
+        this.pointer = that.pointer;
+        this.redirect = that.redirect;
+        this.text = that.text;
+        this.redirectedFromTitle = that.redirectedFromTitle;
+    }
