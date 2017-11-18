@@ -41,5 +41,7 @@
 	<classpathentry kind="lib" path="lib/org.eclipse.jdt.debug.ui_3.4.1.v20090811_r351.jar"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.osgi-3.8.0.v20120529-1548.jar"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.text-3.5.100.v20110505-0800.jar"/>
+	<classpathentry kind="lib" path="lib/mallet-deps.jar"/>
+	<classpathentry kind="lib" path="lib/mallet.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
