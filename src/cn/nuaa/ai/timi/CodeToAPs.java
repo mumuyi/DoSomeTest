@@ -7,17 +7,33 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CodeToAPs {
 	// ep为key;id为value;
 	private static Map<String, Integer> ep2id = new HashMap<String, Integer>();
 	// ep的id为key;ep出现次数为value;
 	private static Map<Integer, Integer> aps = new HashMap<Integer, Integer>();
+	// keywords of ep;
+	private static Map<Integer,Set<String>> keywords = new HashMap<Integer,Set<String>>();
 
 	public static void main(String[] args) {
+		
+		/*
+		String str = "dictionaryUUID=that.dictionaryUUID(asdsa,dasdsa,fsd,fd,fd,f,d,gf,g)";
+		Set<String> set = getKeyWords(str);
+		Iterator<String> iter = set.iterator();
+		while (iter.hasNext()) {
+			System.out.println(iter.next());
+		}
+        */
+
 		// 获取文件;
 		File file = new File("F:\\Java\\DoSomeTest\\FIMIData\\testcode.txt");
 		// 获取方法体;
@@ -33,9 +49,21 @@ public class CodeToAPs {
 			System.out.println(ep);
 			// 维护ep表;
 			if (!ep2id.containsKey(ep)) {
+				// 存入新的ep;
 				int id = ep2id.size();
 				ep2id.put(ep, id);
+				// 存入新的keywords set;
+				keywords.put(id,getKeyWords(content.get(i)));
+			}else{
+				//更新keywords set;
+				int id = ep2id.get(ep);
+				Set<String> set = getKeyWords(content.get(i));
+				Iterator<String> iter = set.iterator();
+				while (iter.hasNext()) {
+					keywords.get(id).add(iter.next());
+				}
 			}
+			
 			// 转为aps;
 			int id = ep2id.get(ep);
 			if (aps.containsKey(id)) {
@@ -47,7 +75,13 @@ public class CodeToAPs {
 		// 输出ep2id 表;
 		System.out.println("\nep2id表:");
 		for (String key : ep2id.keySet()) {
-			System.out.println(key + "   " + ep2id.get(key));
+			System.out.print(key + "   " + ep2id.get(key)+"    ");
+			Set<String> set = keywords.get(ep2id.get(key));
+			Iterator<String> iter = set.iterator();
+			while (iter.hasNext()) {
+				System.out.print(iter.next()+"  ");
+			}
+			System.out.println();
 		}
 		// 输出一个代码片段的aps;
 		System.out.println("\naps:");
@@ -65,6 +99,49 @@ public class CodeToAPs {
 		String ep = str.replaceAll("[#]+", "#");
 		// System.out.println(ep);
 		return ep;
+	}
+
+	private static Set<String> getKeyWords(String code) {
+		Set<String> list = new HashSet<String>();
+		String[] tokens = code.split("\\.|=|\\(|\\)|\\_|,|;|\\<|\\>|\\+|\\-|\\*|\\/|\\ ");
+		for (int j = 0; j < tokens.length; j++) {
+			int index = 0;
+			String temp = tokens[j];
+			String token = temp.replaceAll(" ", "");
+			//去掉空字符串;
+			if(token.equals("")){
+				continue;
+			}else{
+				//去掉纯数字;
+				Pattern pattern = Pattern.compile("[0-9]{1,}"); 
+				if(pattern.matcher((CharSequence)token).matches()){
+					continue;
+				}
+			}
+			
+			System.out.println(token+"!!!!!!!!!!!!!!!!!!!!!");
+			for (int i = 0; i < token.length(); i++) {
+				char ch = token.charAt(i);
+				if (ch == '_') {
+					list.add(token.substring(index, i));
+					index = i;
+				} else if (ch <= 'Z' && ch >= 'A') {
+					if (i > 0) {
+						char ch1 = token.charAt(i - 1);
+						if (ch1 <= 'z' && ch1 >= 'a') {
+							list.add(token.substring(index, i));
+							index = i;
+						}
+					}
+				}
+			}
+			if(index == 0){
+				list.add(token);
+			}else if(index < token.length()){
+				list.add(token.substring(index,token.length()));
+			}
+		}
+		return list;
 	}
 
 	private static List<String> getContent(File file) {
@@ -111,14 +188,14 @@ public class CodeToAPs {
 		}
 		// 去掉方法的声明;
 		cleanList.remove(0);
-		//去掉开始和结尾的空格;
-		for(int i=0;i<cleanList.size();i++){
-			if(cleanList.get(i).charAt(0)==' '){
+		// 去掉开始和结尾的空格;
+		for (int i = 0; i < cleanList.size(); i++) {
+			if (cleanList.get(i).charAt(0) == ' ') {
 				cleanList.set(i, cleanList.get(i).substring(1, cleanList.get(i).length()));
 			}
-			
-			if(cleanList.get(i).charAt(cleanList.get(i).length()-1)==' '){
-				cleanList.set(i, cleanList.get(i).substring(0, cleanList.get(i).length()-1));
+
+			if (cleanList.get(i).charAt(cleanList.get(i).length() - 1) == ' ') {
+				cleanList.set(i, cleanList.get(i).substring(0, cleanList.get(i).length() - 1));
 			}
 		}
 		// 去掉除for循环中的分号之外的其余分号;
@@ -127,7 +204,7 @@ public class CodeToAPs {
 				cleanList.set(i, cleanList.get(i).replaceAll(";", ""));
 			}
 		}
-		
+
 		return cleanList;
 	}
 }
