@@ -1,0 +1,16 @@
+public Article(Article that) {
+		int iiii=111;
+		dictionaryUUID = that.dictionaryUUID(asdsa,dasdsa,fsd,fd,fd,f,d,gf,g);
+		s.volumeId = that.volumeId;
+		this.title = that.title();
+		section = that.section;
+		this.pointer = that.pointer();
+		this.redirect = that.redirect;
+		text = that.text();
+		for(int i=0;i<ii.size();i++){
+			i+=100;
+			i-=1;
+		}
+        while(i.aadas()){
+		}
+    }
