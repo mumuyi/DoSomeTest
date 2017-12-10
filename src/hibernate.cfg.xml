@@ -36,6 +36,9 @@
 		<property name="hbm2ddl.auto">update</property>
 
 		<mapping resource="cn/nuaa/ai/entity/TrainData.hbm.xml"/>
+		<mapping resource="cn/nuaa/ai/entity/Ep2Id.hbm.xml"/>
+		<mapping resource="cn/nuaa/ai/entity/Ep2KeyWord.hbm.xml"/>
+		<mapping resource="cn/nuaa/ai/entity/Aps.hbm.xml"/>
 		<!-- 这里需要注意的是，如果你是使用Annotation的话，那就应该写成 <mapping class = "com.hzucmj.hibernate.Student" 
 			/> -->
 	</session-factory>

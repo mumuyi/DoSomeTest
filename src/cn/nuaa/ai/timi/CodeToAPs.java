@@ -6,14 +6,19 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import cn.nuaa.ai.dao.MyHibernate;
+import cn.nuaa.ai.entity.Aps;
+import cn.nuaa.ai.entity.Ep2Id;
+import cn.nuaa.ai.entity.Ep2KeyWord;
 
 public class CodeToAPs {
 	// ep为key;id为value;
@@ -88,6 +93,39 @@ public class CodeToAPs {
 		for (int key : aps.keySet()) {
 			System.out.println(key + "   " + aps.get(key));
 		}
+		
+		//将数据存入数据库;
+		/*
+		for(String ep : ep2id.keySet()){
+			//将ep和ep-id 存入数据库;
+			Ep2Id epid = new Ep2Id();
+			epid.setEp(ep);
+			epid.setId(ep2id.get(ep));
+			MyHibernate.sqlSaveOrUpdate(epid);
+			
+			//存入ep-id 和 ep 关键字;
+			int id = ep2id.get(ep);
+			Set<String> set = keywords.get(id);
+			Iterator<String> iter = set.iterator();
+			while (iter.hasNext()) {
+				Ep2KeyWord epkeyword = new Ep2KeyWord();
+				epkeyword.setEpId(id);
+				epkeyword.setKeyWord(iter.next());
+				MyHibernate.sqlSaveOrUpdate(epkeyword);
+			}
+		}
+		//将当前代码片段的aps存入数据库;
+		List<Integer> eps = new ArrayList<Integer>();
+		List<Integer> L = new ArrayList<Integer>();
+		for(int epid : aps.keySet()){
+			eps.add(epid);
+			L.add(aps.get(epid));
+		}
+		Aps ap = new Aps();
+		ap.setEpIds((String)eps.toString().substring(1,eps.toString().length()-1));
+		ap.setFreqs((String)L.toString().substring(1,L.toString().length()-1));
+		MyHibernate.sqlSaveOrUpdate(ap);
+		*/
 	}
 
 	private static String code2ep(String code) {

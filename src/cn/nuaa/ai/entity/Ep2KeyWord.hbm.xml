@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="cn.nuaa.ai.entity">
+    <class name="Ep2KeyWord" table="Ep2KeyWord">
+        <id name="Id" column="Id"></id>
+        <property name="EpId" column="EpId" />
+        <property name="KeyWord" column="KeyWord" />
+    </class>
+</hibernate-mapping>
