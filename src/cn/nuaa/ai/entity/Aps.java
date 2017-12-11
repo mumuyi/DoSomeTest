@@ -4,6 +4,7 @@ public class Aps {
 	private int Id;
 	private String EpIds;
 	private String Freqs;
+	private String FilePath;
 
 	public int getId() {
 		return Id;
@@ -27,6 +28,14 @@ public class Aps {
 
 	public void setFreqs(String freqs) {
 		Freqs = freqs;
+	}
+
+	public String getFilePath() {
+		return FilePath;
+	}
+
+	public void setFilePath(String filePath) {
+		FilePath = filePath;
 	}
 
 }

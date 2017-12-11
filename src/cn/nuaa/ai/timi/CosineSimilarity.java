@@ -7,30 +7,40 @@ import cn.nuaa.ai.dao.MyHibernate;
 import cn.nuaa.ai.entity.Aps;
 
 public class CosineSimilarity {
-	private static List<Integer> epIds = new ArrayList<Integer>();
-	private static int Totalnum = 0;
-	@SuppressWarnings("unchecked")
-	//这个List 可考虑在调用本方法时传入,进一步减少数据库操作;
-	private static List<Aps> apsList = (List<Aps>) MyHibernate.sqlQuery(0, 1, "from Aps");
+	private static List<Integer> epIds;
+	private static int TotalSnippetsNum = 0;
+	private static List<Aps> apsList;
 	
 	public static void main(String[] args) {
 
 		//这里加了一个10;是因为现在数据库里面只有一个数据,会造成计算结果为0;当数据多了之后就可以删掉了;
-		Totalnum = getTotalSnippetNum()+10; 
-		Aps aps1 = apsList.get(0);
-		Aps aps2 = apsList.get(0);
+		int totalnum = getTotalSnippetNum()+10; 
 
 		//System.out.println(getLxi(aps1, 0));
 		//System.out.println(getGx(111));
 		//初始化了一个epId表,即确定了整个系统中一共有多少个ep;实际使用时,需要按照ep2id表中的实际数据来初始化;
-		for(int i=0;i<9;i++){
-			epIds.add(i);
+		List<Integer> epids = new ArrayList<Integer>();
+		int TotalEpNum = (int) MyHibernate.sqlGetRecordNum("select count(*) from Ep2Id");
+		for(int i=0;i<TotalEpNum;i++){
+			epids.add(i);
 		}
+		//获取aps表;
+		@SuppressWarnings("unchecked")
+		List<Aps> apslist = (List<Aps>) MyHibernate.sqlQuery(0, 1, "from Aps");
 		
-		System.out.println(getCosineSimilarity(aps1, aps2));
+		Aps aps1 = apslist.get(0);
+		Aps aps2 = apslist.get(0);
 		
+		CosineSimilarity cos = new CosineSimilarity(epids, totalnum, apslist);
+		System.out.println(cos.getCosineSimilarity(aps1, aps2));
 	}
 
+	public CosineSimilarity(List<Integer> epids,int totalnum,List<Aps> apslist){
+		epIds = epids;
+		TotalSnippetsNum = totalnum;
+		apsList = apslist;
+	}
+	
 	private static int getLxi(Aps aps, int id) {
 		int ans = 0;
 		List<Integer> EpIds = String2List(aps.getEpIds());
@@ -75,7 +85,7 @@ public class CosineSimilarity {
 	private static double getHxi(Aps aps, int id) {
 		double hxi = 1.0*getLxi(aps, id);
 		double gx = 1.0*getGx(id);
-		double N=1.0*Totalnum;
+		double N=1.0*TotalSnippetsNum;
 		//System.out.println("N:"+N);
 		//System.out.println("TF:"+(1.0+Math.log10(hxi)));
 		//System.out.println("IDF:"+Math.log10(N/gx));
@@ -90,7 +100,7 @@ public class CosineSimilarity {
 		return vec;
 	}
 
-	public static double getCosineSimilarity(Aps aps1, Aps aps2) {
+	public double getCosineSimilarity(Aps aps1, Aps aps2) {
 		double similarity = 0.0;
 		List<Double> vec1 = getVector(aps1);
 		List<Double> vec2 = getVector(aps2);

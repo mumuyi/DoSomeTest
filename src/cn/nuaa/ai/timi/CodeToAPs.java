@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -95,7 +94,7 @@ public class CodeToAPs {
 		}
 		
 		//将数据存入数据库;
-		/*
+		
 		for(String ep : ep2id.keySet()){
 			//将ep和ep-id 存入数据库;
 			Ep2Id epid = new Ep2Id();
@@ -125,7 +124,7 @@ public class CodeToAPs {
 		ap.setEpIds((String)eps.toString().substring(1,eps.toString().length()-1));
 		ap.setFreqs((String)L.toString().substring(1,L.toString().length()-1));
 		MyHibernate.sqlSaveOrUpdate(ap);
-		*/
+		
 	}
 
 	private static String code2ep(String code) {

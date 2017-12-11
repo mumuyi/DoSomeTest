@@ -8,5 +8,6 @@
         <id name="Id" column="Id"></id>
         <property name="EpIds" column="EpIds" />
         <property name="Freqs" column="Freqs" />
+        <property name="FilePath" column="FilePath" />
     </class>
 </hibernate-mapping>
