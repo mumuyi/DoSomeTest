@@ -1,0 +1,3 @@
+ArticleNotFound(LookupWord word) {
+        this.word = word;
+    }

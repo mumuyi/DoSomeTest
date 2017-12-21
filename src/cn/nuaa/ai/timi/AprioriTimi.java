@@ -11,7 +11,7 @@ import java.util.*;
  *
  * AssociationRulesMining()函数实现置信度计算和关联规则挖掘
  */
-public class AprioriMyself {
+public class AprioriTimi {
 
 	public static int times = 0;// 迭代次数
 	private static double MIN_SUPPROT = 0.02;// 最小支持度百分比
@@ -24,8 +24,9 @@ public class AprioriMyself {
 	public static void main(String args[]) {
 
 		/************* 读取数据集 **************/
-		record = getRecord("F:\\Java\\DoSomeTest\\FIMIData\\top1000data");
+		//record = getRecord("F:\\Java\\DoSomeTest\\FIMIData\\top1000data");
 		// record = getRecord("F:\\Java\\DoSomeTest\\FIMIData\\fulldata");
+		record = getRecord("F:\\Java\\DoSomeTest\\FIMIData\\aps\\aps.txt");
 		// 控制台输出记录
 		System.out.println("读取数据集完成");
 		// ShowData(record);

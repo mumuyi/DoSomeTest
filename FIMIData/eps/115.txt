@@ -1,0 +1,1 @@
+result add next current Iterator

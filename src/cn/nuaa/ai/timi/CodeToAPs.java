@@ -21,25 +21,23 @@ import cn.nuaa.ai.entity.Ep2KeyWord;
 
 public class CodeToAPs {
 	// ep为key;id为value;
-	private static Map<String, Integer> ep2id = new HashMap<String, Integer>();
+	private Map<String, Integer> ep2id = new HashMap<String, Integer>();
 	// ep的id为key;ep出现次数为value;
-	private static Map<Integer, Integer> aps = new HashMap<Integer, Integer>();
+	private Map<Integer, Integer> aps = new HashMap<Integer, Integer>();
 	// keywords of ep;
-	private static Map<Integer,Set<String>> keywords = new HashMap<Integer,Set<String>>();
+	private Map<Integer, Set<String>> keywords = new HashMap<Integer, Set<String>>();
 
 	public static void main(String[] args) {
-		
-		/*
-		String str = "dictionaryUUID=that.dictionaryUUID(asdsa,dasdsa,fsd,fd,fd,f,d,gf,g)";
-		Set<String> set = getKeyWords(str);
-		Iterator<String> iter = set.iterator();
-		while (iter.hasNext()) {
-			System.out.println(iter.next());
-		}
-        */
+	}
 
+	public CodeToAPs(Map<String, Integer> ep2id, Map<Integer, Set<String>> keywords) {
+		this.ep2id = ep2id;
+		this.keywords = keywords;
+	}
+
+	public void TransformC2A(File file, String filePath) {
 		// 获取文件;
-		File file = new File("F:\\Java\\DoSomeTest\\FIMIData\\testcode.txt");
+		// File file = new File(filepath);
 		// 获取方法体;
 		List<String> content = getContent(file);
 		System.out.println("方法体:");
@@ -57,9 +55,9 @@ public class CodeToAPs {
 				int id = ep2id.size();
 				ep2id.put(ep, id);
 				// 存入新的keywords set;
-				keywords.put(id,getKeyWords(content.get(i)));
-			}else{
-				//更新keywords set;
+				keywords.put(id, getKeyWords(content.get(i)));
+			} else {
+				// 更新keywords set;
 				int id = ep2id.get(ep);
 				Set<String> set = getKeyWords(content.get(i));
 				Iterator<String> iter = set.iterator();
@@ -67,7 +65,7 @@ public class CodeToAPs {
 					keywords.get(id).add(iter.next());
 				}
 			}
-			
+
 			// 转为aps;
 			int id = ep2id.get(ep);
 			if (aps.containsKey(id)) {
@@ -79,11 +77,11 @@ public class CodeToAPs {
 		// 输出ep2id 表;
 		System.out.println("\nep2id表:");
 		for (String key : ep2id.keySet()) {
-			System.out.print(key + "   " + ep2id.get(key)+"    ");
+			System.out.print(key + "   " + ep2id.get(key) + "    ");
 			Set<String> set = keywords.get(ep2id.get(key));
 			Iterator<String> iter = set.iterator();
 			while (iter.hasNext()) {
-				System.out.print(iter.next()+"  ");
+				System.out.print(iter.next() + "  ");
 			}
 			System.out.println();
 		}
@@ -92,39 +90,13 @@ public class CodeToAPs {
 		for (int key : aps.keySet()) {
 			System.out.println(key + "   " + aps.get(key));
 		}
-		
-		//将数据存入数据库;
-		
-		for(String ep : ep2id.keySet()){
-			//将ep和ep-id 存入数据库;
-			Ep2Id epid = new Ep2Id();
-			epid.setEp(ep);
-			epid.setId(ep2id.get(ep));
-			MyHibernate.sqlSaveOrUpdate(epid);
-			
-			//存入ep-id 和 ep 关键字;
-			int id = ep2id.get(ep);
-			Set<String> set = keywords.get(id);
-			Iterator<String> iter = set.iterator();
-			while (iter.hasNext()) {
-				Ep2KeyWord epkeyword = new Ep2KeyWord();
-				epkeyword.setEpId(id);
-				epkeyword.setKeyWord(iter.next());
-				MyHibernate.sqlSaveOrUpdate(epkeyword);
-			}
-		}
-		//将当前代码片段的aps存入数据库;
-		List<Integer> eps = new ArrayList<Integer>();
-		List<Integer> L = new ArrayList<Integer>();
-		for(int epid : aps.keySet()){
-			eps.add(epid);
-			L.add(aps.get(epid));
-		}
-		Aps ap = new Aps();
-		ap.setEpIds((String)eps.toString().substring(1,eps.toString().length()-1));
-		ap.setFreqs((String)L.toString().substring(1,L.toString().length()-1));
-		MyHibernate.sqlSaveOrUpdate(ap);
-		
+
+		// 将当前代码片段的aps存入数据库;
+		// saveApsToDataBase(filePath);
+		// 将当前代码片段的aps存入文件;
+		//saveApsToFiles();
+		// 清除aps;
+		aps.clear();
 	}
 
 	private static String code2ep(String code) {
@@ -145,18 +117,18 @@ public class CodeToAPs {
 			int index = 0;
 			String temp = tokens[j];
 			String token = temp.replaceAll(" ", "");
-			//去掉空字符串;
-			if(token.equals("")){
+			// 去掉空字符串;
+			if (token.equals("")) {
 				continue;
-			}else{
-				//去掉纯数字;
-				Pattern pattern = Pattern.compile("[0-9]{1,}"); 
-				if(pattern.matcher((CharSequence)token).matches()){
+			} else {
+				// 去掉纯数字;
+				Pattern pattern = Pattern.compile("[0-9]{1,}");
+				if (pattern.matcher((CharSequence) token).matches()) {
 					continue;
 				}
 			}
-			
-			System.out.println(token+"!!!!!!!!!!!!!!!!!!!!!");
+
+			System.out.println(token + "!!!!!!!!!!!!!!!!!!!!!");
 			for (int i = 0; i < token.length(); i++) {
 				char ch = token.charAt(i);
 				if (ch == '_') {
@@ -172,10 +144,10 @@ public class CodeToAPs {
 					}
 				}
 			}
-			if(index == 0){
+			if (index == 0) {
 				list.add(token);
-			}else if(index < token.length()){
-				list.add(token.substring(index,token.length()));
+			} else if (index < token.length()) {
+				list.add(token.substring(index, token.length()));
 			}
 		}
 		return list;
@@ -225,9 +197,14 @@ public class CodeToAPs {
 		}
 		// 去掉方法的声明;
 		cleanList.remove(0);
+		for (int i = 0; i < cleanList.size(); i++) {
+			if (cleanList.get(i).equals("\n") || cleanList.get(i).equals("")) {
+				cleanList.remove(i);
+			}
+		}
 		// 去掉开始和结尾的空格;
 		for (int i = 0; i < cleanList.size(); i++) {
-			if (cleanList.get(i).charAt(0) == ' ') {
+			if (cleanList.get(i) != null && cleanList.get(i).length() >= 0 && cleanList.get(i).charAt(0) == ' ') {
 				cleanList.set(i, cleanList.get(i).substring(1, cleanList.get(i).length()));
 			}
 
@@ -243,5 +220,93 @@ public class CodeToAPs {
 		}
 
 		return cleanList;
+	}
+
+	public void saveToDataBase() {
+		// 将数据存入数据库;
+
+		for (String ep : ep2id.keySet()) {
+			// 将ep和ep-id 存入数据库;
+			Ep2Id epid = new Ep2Id();
+			epid.setEp(ep);
+			epid.setId(ep2id.get(ep));
+			MyHibernate.sqlSaveOrUpdate(epid);
+
+			// 存入ep-id 和 ep 关键字;
+			int id = ep2id.get(ep);
+			Set<String> set = keywords.get(id);
+			Iterator<String> iter = set.iterator();
+			while (iter.hasNext()) {
+				Ep2KeyWord epkeyword = new Ep2KeyWord();
+				epkeyword.setEpId(id);
+				epkeyword.setKeyWord(iter.next());
+				MyHibernate.sqlSaveOrUpdate(epkeyword);
+			}
+		}
+	}
+
+	private void saveApsToFiles() {
+		String filePath = "F:\\Java\\DoSomeTest\\FIMIData\\aps\\aps.txt";
+		String content = "";
+		int i = 0;
+		for (int key : aps.keySet()) {
+			if (i == 0) {
+				content += key;
+				i++;
+			} else
+				content += "," + key;
+		}
+		SaveToFile sf = new SaveToFile();
+		try {
+			sf.writeFileContent(filePath, content);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private void saveApsToDataBase(String filePath) {
+		List<Integer> eps = new ArrayList<Integer>();
+		List<Integer> L = new ArrayList<Integer>();
+		for (int epid : aps.keySet()) {
+			eps.add(epid);
+			L.add(aps.get(epid));
+		}
+		Aps ap = new Aps();
+		ap.setEpIds((String) eps.toString().substring(1, eps.toString().length() - 1));
+		ap.setFreqs((String) L.toString().substring(1, L.toString().length() - 1));
+		ap.setFilePath(filePath);
+		MyHibernate.sqlSaveOrUpdate(ap);
+	}
+
+	public void saveKeyWordsToFiles() {
+		SaveToFile sf = new SaveToFile();
+		for (String ep : ep2id.keySet()) {
+			int id = ep2id.get(ep);
+			String filePath = "F:\\Java\\DoSomeTest\\FIMIData\\eps\\"+id+".txt";
+			String content = "";
+			Set<String> set = keywords.get(id);
+			Iterator<String> iter = set.iterator();
+			int i=0;
+			while (iter.hasNext()) {
+				if(i==0){
+					content+=iter.next();
+					i++;
+				}else{
+					content+=(" "+iter.next());
+				}
+			}
+			sf.createFile(filePath, content);
+		}
+	}
+	
+	public void saveEpToDataBase(){
+		for (String ep : ep2id.keySet()) {
+			// 将ep和ep-id 存入数据库;
+			Ep2Id epid = new Ep2Id();
+			epid.setEp(ep);
+			epid.setId(ep2id.get(ep));
+			MyHibernate.sqlSaveOrUpdate(epid);
+		}
 	}
 }

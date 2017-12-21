@@ -1,0 +1,1 @@
+Str static Article from Json String IOException throws serialized

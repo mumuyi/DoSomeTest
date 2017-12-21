@@ -1,0 +1,1 @@
+Ignore current prev Article equals if Section article
