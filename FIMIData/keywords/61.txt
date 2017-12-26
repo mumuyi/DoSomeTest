@@ -1,0 +1,1 @@
+!prev Equals current Article section if article

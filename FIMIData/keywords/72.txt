@@ -1,0 +1,1 @@
+layout R view set Content View eink article

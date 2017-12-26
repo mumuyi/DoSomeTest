@@ -1,0 +1,1 @@
+Window orientation get Manager Default int Display

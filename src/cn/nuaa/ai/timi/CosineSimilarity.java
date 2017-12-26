@@ -14,7 +14,7 @@ public class CosineSimilarity {
 	public static void main(String[] args) {
 
 		//这里加了一个10;是因为现在数据库里面只有一个数据,会造成计算结果为0;当数据多了之后就可以删掉了;
-		int totalnum = getTotalSnippetNum()+10; 
+		int totalnum = getTotalSnippetNum(); 
 
 		//System.out.println(getLxi(aps1, 0));
 		//System.out.println(getGx(111));
@@ -24,9 +24,10 @@ public class CosineSimilarity {
 		for(int i=0;i<TotalEpNum;i++){
 			epids.add(i);
 		}
+		//System.out.println("TotalEpNum   "+TotalEpNum);
 		//获取aps表;
 		@SuppressWarnings("unchecked")
-		List<Aps> apslist = (List<Aps>) MyHibernate.sqlQuery(0, 1, "from Aps");
+		List<Aps> apslist = (List<Aps>) MyHibernate.sqlQuery(0, 100, "from Aps");
 		
 		Aps aps1 = apslist.get(0);
 		Aps aps2 = apslist.get(0);
@@ -86,10 +87,12 @@ public class CosineSimilarity {
 		double hxi = 1.0*getLxi(aps, id);
 		double gx = 1.0*getGx(id);
 		double N=1.0*TotalSnippetsNum;
+		//System.out.println("hxi:"+ hxi);
+		//System.out.println("gx:"+ gx);
 		//System.out.println("N:"+N);
-		//System.out.println("TF:"+(1.0+Math.log10(hxi)));
-		//System.out.println("IDF:"+Math.log10(N/gx));
-		return ((1.0+Math.log10(hxi))*Math.log10(N/gx));
+		//System.out.println("TF:"+(1.0+Math.log(hxi+1.0)));
+		//System.out.println("IDF:"+Math.log(N/(gx+1.0)));
+		return ((1.0+Math.log(hxi+1.0))*Math.log(N/gx));
 	}
 
 	private static List<Double> getVector(Aps aps) {
@@ -105,8 +108,8 @@ public class CosineSimilarity {
 		List<Double> vec1 = getVector(aps1);
 		List<Double> vec2 = getVector(aps2);
 
-		System.out.println(vec1);
-		System.out.println(vec2);
+		//System.out.println(vec1);
+		//System.out.println(vec2);
 		
 		double vecmulti = 0.0;
 		for (int i = 0; i < vec1.size(); i++) {

@@ -283,7 +283,7 @@ public class CodeToAPs {
 		SaveToFile sf = new SaveToFile();
 		for (String ep : ep2id.keySet()) {
 			int id = ep2id.get(ep);
-			String filePath = "F:\\Java\\DoSomeTest\\FIMIData\\eps\\"+id+".txt";
+			String filePath = "F:\\Java\\DoSomeTest\\FIMIData\\keywords\\"+id+".txt";
 			String content = "";
 			Set<String> set = keywords.get(id);
 			Iterator<String> iter = set.iterator();
