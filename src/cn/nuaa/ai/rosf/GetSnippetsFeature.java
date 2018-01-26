@@ -1,4 +1,4 @@
-package cn.nuaa.ai;
+package cn.nuaa.ai.rosf;
 /**
  * 获取代码片段的文本特征信息。
  * */

@@ -1,4 +1,4 @@
-package cn.nuaa.ai;
+package cn.nuaa.ai.rosf;
 /**
  * 将文本形式存储的训练集和测试集数据存入数据库。
  * */

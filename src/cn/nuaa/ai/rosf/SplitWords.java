@@ -1,4 +1,4 @@
-package cn.nuaa.ai;
+package cn.nuaa.ai.rosf;
 /**
  * 由于直接使用LDA 进行主题提取的分词效果不好，所以在进行主题计算之前先使用lucene 的分词算法进行分词。
  * */
