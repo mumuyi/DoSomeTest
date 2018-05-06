@@ -1,21 +1,40 @@
 package cn.nuaa.ai.LCS;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 public class TestLCS {
+	
+	private static List<OpCode> oplist = new ArrayList<OpCode>();
+	
+	private static List<List<OpCode>> instructions = new ArrayList<List<OpCode>>();
+	
 	public static void main(String[] args) {
-		String x = "213789217389127389";
-		String y = "1298748912738912739";
-		LCSequence(x, y);
-		System.out.println();
-		LCSString(x,y);
+		//String x = "213789217389127389";
+		//String y = "1298748912738912739";
+		//LCSequence(x, y);
+		//System.out.println();
+		//LCSString(x,y);
+		
+		getOpCodeFromFile();
+		getInstructions();
+		//LCSequence(instructions.get(0),instructions.get(1));
+		//LCSString(instructions.get(0),instructions.get(1));
+		SetComputing(instructions.get(0),instructions.get(1));
 	}
 
-	public static void LCSequence(String x, String y) {
+	public static void LCSequence(List<OpCode> x, List<OpCode> y) {
 
-		char[] s1 = x.toCharArray();
-		char[] s2 = y.toCharArray();
-		int[][] array = new int[x.length() + 1][y.length() + 1];// 此处的棋盘长度要比字符串长度多加1，需要多存储一行0和一列0
+		int[][] array = new int[x.size() + 1][y.size() + 1];// 此处的棋盘长度要比字符串长度多加1，需要多存储一行0和一列0
 
 		for (int j = 0; j < array[0].length; j++) {// 第0行第j列全部赋值为0
 			array[0][j] = 0;
@@ -26,7 +45,8 @@ public class TestLCS {
 
 		for (int m = 1; m < array.length; m++) {// 利用动态规划将数组赋满值
 			for (int n = 1; n < array[m].length; n++) {
-				if (s1[m - 1] == s2[n - 1]) {
+				//if (s1[m - 1] == s2[n - 1]) {
+				if (x.get(m - 1).getCodeId() == y.get(n - 1).getCodeId()) {
 					array[m][n] = array[m - 1][n - 1] + 1;// 动态规划公式一
 				} else {
 					array[m][n] = max(array[m - 1][n], array[m][n - 1]);// 动态规划公式二
@@ -35,22 +55,22 @@ public class TestLCS {
 		}
 		
 		
-		for (int m = 1; m < array.length; m++) {// 利用动态规划将数组赋满值
-			for (int n = 1; n < array[m].length; n++) {
-				System.out.print(array[m][n]+" ");
-			}
-			System.out.println();
-		}
+		//for (int m = 1; m < array.length; m++) {// 利用动态规划将数组赋满值
+		//	for (int n = 1; n < array[m].length; n++) {
+		//		System.out.print(array[m][n]+" ");
+		//	}
+		//	System.out.println();
+		//}
 		
 		
-		Stack<Character> stack = new Stack<Character>();
-		int i = x.length() - 1;
-		int j = y.length() - 1;
+		Stack<OpCode> stack = new Stack<OpCode>();
+		int i = x.size() - 1;
+		int j = y.size() - 1;
 
 		int cost = 0; 
 		while ((i >= 0) && (j >= 0)) {
-			if (s1[i] == s2[j]) {// 字符串从后开始遍历，如若相等，则存入栈中
-				stack.push(s1[i]);
+			if (x.get(i).getCodeId() == y.get(j).getCodeId()) {// 字符串从后开始遍历，如若相等，则存入栈中
+				stack.push(x.get(i));
 				i--;
 				j--;
 			} else {
@@ -65,7 +85,7 @@ public class TestLCS {
 
 		System.out.println("最长公共子序列:");
 		while (!stack.isEmpty()) {// 打印输出栈正好是正向输出最大的公共子序列
-			System.out.print(stack.pop());
+			System.out.println(stack.pop().getName());
 		}
 		System.out.println();
 		System.out.println("Cost: " + cost);
@@ -75,10 +95,10 @@ public class TestLCS {
 		return (a > b) ? a : b;
 	}
 
-	public static void LCSString(String x, String y) {
+	public static void LCSString(List<OpCode> x, List<OpCode> y) {
 		int len1, len2;
-		len1 = x.length();
-		len2 = y.length();
+		len1 = x.size();
+		len2 = y.size();
 		int maxLen = len1 > len2 ? len1 : len2;
 
 		int[] max = new int[maxLen];// 保存最长子串长度的数组
@@ -88,7 +108,7 @@ public class TestLCS {
 		int i, j;
 		for (i = 0; i < len2; i++) {
 			for (j = len1 - 1; j >= 0; j--) {
-				if (y.charAt(i) == x.charAt(j)) {
+				if (y.get(i).getCodeId() == x.get(j).getCodeId()) {
 					if ((i == 0) || (j == 0))
 						c[j] = 1;
 					else
@@ -128,9 +148,137 @@ public class TestLCS {
 			if (max[j] > 0) {
 				System.out.println("最长公共公共子串 "+(j+1)+":");
 				for (i = maxIndex[j] - max[j] + 1; i <= maxIndex[j]; i++)
-					System.out.print(x.charAt(i));
+					System.out.println(x.get(i).getName());
 				System.out.println(" ");
 			}
 		}
+	}
+	
+	
+	public static void getOpCodeFromFile(){
+		FileInputStream fis = null;
+		InputStreamReader isr = null;
+		BufferedReader br = null; // 用于包装InputStreamReader,提高处理性能。因为BufferedReader有缓冲的，而InputStreamReader没有。
+		try {
+			String str = "";
+			fis = new FileInputStream("C:\\Users\\ai\\Desktop\\opcode.txt");// FileInputStream
+			// 从文件系统中的某个文件中获取字节
+			isr = new InputStreamReader(fis);// InputStreamReader 是字节流通向字符流的桥梁,
+			br = new BufferedReader(isr);// 从字符输入流中读取文件中的内容,封装了一个new
+											// InputStreamReader的对象
+			while ((str = br.readLine()) != null) {
+				OpCode opc = new OpCode();
+				String str1[] = str.split(" ");
+				opc.setCodeId(Integer.parseInt(str1[0]));
+				opc.setCode(str1[1].replaceAll("\\(|\\)", ""));
+				opc.setName(str1[2]);
+				opc.setLevle1(Integer.parseInt(str1[3]));
+				opc.setLevle2(Integer.parseInt(str1[4]));
+				oplist.add(opc);
+			}
+			//for(OpCode op : oplist){
+			//	System.out.println(op.getCodeId() + " " + op.getCode() + " " + op.getName() + " " + op.getLevle1() + " " + op.getLevle2());
+			//}
+		} catch (FileNotFoundException e) {
+			System.out.println("找不到指定文件");
+		} catch (IOException e) {
+			System.out.println("读取文件失败");
+		} finally {
+			try {
+				br.close();
+				isr.close();
+				fis.close();
+				// 关闭的时候最好按照先后顺序关闭最后开的先关闭所以先关s,再关n,最后关m
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public static int getOpCodeID(String opc){
+		for(OpCode op : oplist){
+			if(opc.equals(op.getName())){
+				return op.getCodeId();
+			}
+		}
+		return -1;
+	}
+	
+	
+	// 从反编译的文件中抽取需要的信息;
+	private static void getInstructions() {
+
+		int i = 0;
+		File directory = new File("F:\\data\\instruction\\");
+		File[] files = directory.listFiles();
+		for (File file : files) {
+			FileInputStream fis = null;
+			InputStreamReader isr = null;
+			BufferedReader br = null;
+			String filename = file.getName();
+			List<OpCode> list = new ArrayList<OpCode>();
+			try {
+				String str = "";
+				fis = new FileInputStream("F:\\data\\instruction\\" + filename);
+				isr = new InputStreamReader(fis);
+				br = new BufferedReader(isr);
+				while ((str = br.readLine()) != null) {
+					//System.out.println(str);
+					//System.out.println(getOpCodeID(str));
+					list.add(oplist.get(getOpCodeID(str)));
+				}
+			} catch (FileNotFoundException e) {
+				System.out.println("Cann't find: " + filename);
+			} catch (IOException e) {
+				System.out.println("Cann't read: " + filename);
+			} finally {
+				try {
+					br.close();
+					isr.close();
+					fis.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			instructions.add(list);
+			i++;
+			if(i==2)
+				break;
+		}
+		
+		
+		//for(OpCode op : instructions.get(0)){
+		//	System.out.println(op.getName());
+		//}
+	}
+	
+	public static double SetComputing(List<OpCode> x, List<OpCode> y){
+		Set<Integer> xSet = new HashSet<Integer>(); 
+		Set<Integer> ySet = new HashSet<Integer>(); 
+		for(OpCode op : x){
+			xSet.add(op.getCodeId());
+		}
+		for(OpCode op : y){
+			ySet.add(op.getCodeId());
+		}
+
+		Set<Integer> intersection = new HashSet<Integer>();
+		intersection.addAll(xSet);
+		intersection.retainAll(ySet);
+		
+		Set<Integer>  union = new HashSet<Integer>();
+		union.addAll(xSet);
+		union.addAll(ySet);
+		
+		
+		
+		System.out.println(xSet);
+		System.out.println(ySet);
+		System.out.println(intersection);
+		System.out.println(union);
+		
+		System.out.println(1.0*intersection.size()/union.size());
+		
+		return 1.0*intersection.size()/union.size();
 	}
 }
