@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,12 +28,30 @@ public class TestLCS {
 		
 		getOpCodeFromFile();
 		getInstructions();
-		//LCSequence(instructions.get(0),instructions.get(1));
-		//LCSString(instructions.get(0),instructions.get(1));
-		SetComputing(instructions.get(0),instructions.get(1));
+		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
+		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
+		for(int i = 0;i<instructions.size();i++){
+			double s1 = LCSequence(instructions.get(2),instructions.get(i));
+			double s2 = LCSString(instructions.get(2),instructions.get(i));
+			double s3 = SetComputing(instructions.get(2),instructions.get(i));
+			System.out.println();
+			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
+			s2c.setClassId(i);
+			s2c.setSimilarity(s1*0.5+s2*0.3+s3*0.2);
+			simiList.add(s2c);
+		}
+		Collections.sort(simiList);
+		int i = 0;
+		for(Similarity2ClassIndex s2c : simiList){
+			System.out.println(s2c.getClassId()+"  " + s2c.getSimilarity());
+			i++;
+			if(i > 11){
+				break;
+			}
+		}
 	}
 
-	public static void LCSequence(List<OpCode> x, List<OpCode> y) {
+	public static double LCSequence(List<OpCode> x, List<OpCode> y) {
 
 		int[][] array = new int[x.size() + 1][y.size() + 1];// 此处的棋盘长度要比字符串长度多加1，需要多存储一行0和一列0
 
@@ -67,7 +86,8 @@ public class TestLCS {
 		int i = x.size() - 1;
 		int j = y.size() - 1;
 
-		int cost = 0; 
+		double cost = 0.0; 
+		int amount = 0;
 		while ((i >= 0) && (j >= 0)) {
 			if (x.get(i).getCodeId() == y.get(j).getCodeId()) {// 字符串从后开始遍历，如若相等，则存入栈中
 				stack.push(x.get(i));
@@ -79,23 +99,38 @@ public class TestLCS {
 				} else {
 					i--;
 				}
-				cost++;
+				if((i >= 0) && (j >= 0)){
+					amount++;
+					if((x.get(i).getLevle1() == y.get(j).getLevle1())&&(x.get(i).getLevle2() == y.get(j).getLevle2())){
+						cost += 0.1;
+					}else if((x.get(i).getLevle1() == y.get(j).getLevle1())&&(x.get(i).getLevle2() != y.get(j).getLevle2())){
+						cost += 0.3;
+					}else if((x.get(i).getLevle1() != y.get(j).getLevle1())){
+						cost += 1;
+					}
+				}
 			}
 		}
 
-		System.out.println("最长公共子序列:");
-		while (!stack.isEmpty()) {// 打印输出栈正好是正向输出最大的公共子序列
-			System.out.println(stack.pop().getName());
+		//System.out.println("最长公共子序列:");
+		//while (!stack.isEmpty()) {// 打印输出栈正好是正向输出最大的公共子序列
+		//	System.out.println(stack.pop().getName());
+		//}
+		//System.out.println();
+		if(amount == 0){
+			System.out.println("LCSequence Similarity: " + 0);
+			return 1.0;
+		}else{
+			System.out.println("LCSequence Similarity: " + (1-cost/amount));
+			return (1-cost/amount);
 		}
-		System.out.println();
-		System.out.println("Cost: " + cost);
 	}
 
 	public static int max(int a, int b) {// 比较(a,b)，输出大的值
 		return (a > b) ? a : b;
 	}
 
-	public static void LCSString(List<OpCode> x, List<OpCode> y) {
+	public static double LCSString(List<OpCode> x, List<OpCode> y) {
 		int len1, len2;
 		len1 = x.size();
 		len2 = y.size();
@@ -144,14 +179,24 @@ public class TestLCS {
 			//System.out.println();
 		}
 		// 打印最长子字符串
+		int amount = 0;
 		for (j = 0; j < maxLen; j++) {
+			int amount1 = 0;
 			if (max[j] > 0) {
-				System.out.println("最长公共公共子串 "+(j+1)+":");
-				for (i = maxIndex[j] - max[j] + 1; i <= maxIndex[j]; i++)
-					System.out.println(x.get(i).getName());
-				System.out.println(" ");
+				//System.out.println("最长公共公共子串 "+(j+1)+":");
+				for (i = maxIndex[j] - max[j] + 1; i <= maxIndex[j]; i++){
+					//System.out.println(x.get(i).getName());
+					amount1++;
+				}
+				if(amount1 > amount){
+					amount = amount1;
+				}
+				//System.out.println(" ");
 			}
 		}
+		//System.out.println(amount);
+		System.out.println("LCSString Similarity: " + 1.0*amount/x.size());
+		return 1.0*amount/x.size();
 	}
 	
 	
@@ -208,7 +253,7 @@ public class TestLCS {
 	// 从反编译的文件中抽取需要的信息;
 	private static void getInstructions() {
 
-		int i = 0;
+		//int i = 0;
 		File directory = new File("F:\\data\\instruction\\");
 		File[] files = directory.listFiles();
 		for (File file : files) {
@@ -222,10 +267,13 @@ public class TestLCS {
 				fis = new FileInputStream("F:\\data\\instruction\\" + filename);
 				isr = new InputStreamReader(fis);
 				br = new BufferedReader(isr);
+				//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + filename);
 				while ((str = br.readLine()) != null) {
 					//System.out.println(str);
 					//System.out.println(getOpCodeID(str));
-					list.add(oplist.get(getOpCodeID(str)));
+					if(getOpCodeID(str) != -1){
+						list.add(oplist.get(getOpCodeID(str)));
+					}
 				}
 			} catch (FileNotFoundException e) {
 				System.out.println("Cann't find: " + filename);
@@ -241,9 +289,9 @@ public class TestLCS {
 				}
 			}
 			instructions.add(list);
-			i++;
-			if(i==2)
-				break;
+			//i++;
+			//if(i==2)
+			//	break;
 		}
 		
 		
@@ -272,12 +320,12 @@ public class TestLCS {
 		
 		
 		
-		System.out.println(xSet);
-		System.out.println(ySet);
-		System.out.println(intersection);
-		System.out.println(union);
+		//System.out.println(xSet);
+		//System.out.println(ySet);
+		//System.out.println(intersection);
+		//System.out.println(union);
 		
-		System.out.println(1.0*intersection.size()/union.size());
+		System.out.println("Set Similarity: " + 1.0*intersection.size()/union.size());
 		
 		return 1.0*intersection.size()/union.size();
 	}
