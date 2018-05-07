@@ -6,7 +6,19 @@ public class OpCode {
 	private String name;
 	private int levle1;
 	private int levle2;
+	private String invokedMethod;
 
+	public OpCode(){}
+	
+	public OpCode(OpCode op){
+		this.codeId = op.getCodeId();
+		this.code = op.getCode();
+		this.name = op.getName();
+		this.levle1 = op.getLevle1();
+		this.levle2 = op.getLevle2();
+		this.invokedMethod = op.getInvokedMethod();
+	}
+	
 	public int getCodeId() {
 		return codeId;
 	}
@@ -45,6 +57,14 @@ public class OpCode {
 
 	public void setLevle2(int levle2) {
 		this.levle2 = levle2;
+	}
+
+	public String getInvokedMethod() {
+		return invokedMethod;
+	}
+
+	public void setInvokedMethod(String invokedMethod) {
+		this.invokedMethod = invokedMethod;
 	}
 
 }

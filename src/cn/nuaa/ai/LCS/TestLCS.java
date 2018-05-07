@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,14 +19,10 @@ public class TestLCS {
 	private static List<List<OpCode>> instructions = new ArrayList<List<OpCode>>();
 	
 	public static void main(String[] args) {
-		//String x = "213789217389127389";
-		//String y = "1298748912738912739";
-		//LCSequence(x, y);
-		//System.out.println();
-		//LCSString(x,y);
-		
+		/*
 		getOpCodeFromFile();
 		getInstructions();
+		
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for(int i = 0;i<instructions.size();i++){
@@ -49,8 +44,14 @@ public class TestLCS {
 				break;
 			}
 		}
+		*/
+		getAPIMethod("org/activiti/engine/impl/test/AbstractTestCase.\"<init>\":()V");
 	}
 
+	
+	/**
+	 * 通过两个指令序列间的最长子序列来计算其相似度;
+	 * */
 	public static double LCSequence(List<OpCode> x, List<OpCode> y) {
 
 		int[][] array = new int[x.size() + 1][y.size() + 1];// 此处的棋盘长度要比字符串长度多加1，需要多存储一行0和一列0
@@ -130,6 +131,9 @@ public class TestLCS {
 		return (a > b) ? a : b;
 	}
 
+	/**
+	 * 通过两个指令序列间的最长字串来计算其相似度;
+	 * */
 	public static double LCSString(List<OpCode> x, List<OpCode> y) {
 		int len1, len2;
 		len1 = x.size();
@@ -199,7 +203,9 @@ public class TestLCS {
 		return 1.0*amount/x.size();
 	}
 	
-	
+	/**
+	 * 从文件中读取OpCode;
+	 * */
 	public static void getOpCodeFromFile(){
 		FileInputStream fis = null;
 		InputStreamReader isr = null;
@@ -240,6 +246,9 @@ public class TestLCS {
 		}
 	}
 	
+	/**
+	 * 通过OpCode的Name获取他的ID;
+	 * */
 	public static int getOpCodeID(String opc){
 		for(OpCode op : oplist){
 			if(opc.equals(op.getName())){
@@ -250,10 +259,12 @@ public class TestLCS {
 	}
 	
 	
-	// 从反编译的文件中抽取需要的信息;
+	/**
+	 * 从反编译文件/指令文件中获取数据;
+	 * */
 	private static void getInstructions() {
 
-		//int i = 0;
+		int i = 0;
 		File directory = new File("F:\\data\\instruction\\");
 		File[] files = directory.listFiles();
 		for (File file : files) {
@@ -272,7 +283,18 @@ public class TestLCS {
 					//System.out.println(str);
 					//System.out.println(getOpCodeID(str));
 					if(getOpCodeID(str) != -1){
-						list.add(oplist.get(getOpCodeID(str)));
+						OpCode op = new OpCode(oplist.get(getOpCodeID(str)));
+						list.add(op);
+					}else{
+						String[] strs = str.split(" ");
+						if(strs.length > 1){
+							if(strs[0].equals("invokevirtual")||strs[0].equals("invokespecial")||strs[0].equals("invokestatic")||strs[0].equals("invokeinterface")||strs[0].equals("invokedynamic")){
+								OpCode op = new OpCode(oplist.get(getOpCodeID(strs[0])));
+								System.out.println(strs[1]);
+								op.setInvokedMethod(strs[1]);
+								list.add(op);
+							}
+						}
 					}
 				}
 			} catch (FileNotFoundException e) {
@@ -289,17 +311,20 @@ public class TestLCS {
 				}
 			}
 			instructions.add(list);
-			//i++;
-			//if(i==2)
-			//	break;
+			i++;
+			if(i==1)
+				break;
 		}
 		
 		
-		//for(OpCode op : instructions.get(0)){
-		//	System.out.println(op.getName());
-		//}
+		for(OpCode op : instructions.get(0)){
+			System.out.println(op.getName()+" "+op.getInvokedMethod());
+		}
 	}
 	
+	/**
+	 * 计算集合间的相似度;
+	 * */
 	public static double SetComputing(List<OpCode> x, List<OpCode> y){
 		Set<Integer> xSet = new HashSet<Integer>(); 
 		Set<Integer> ySet = new HashSet<Integer>(); 
@@ -328,5 +353,46 @@ public class TestLCS {
 		System.out.println("Set Similarity: " + 1.0*intersection.size()/union.size());
 		
 		return 1.0*intersection.size()/union.size();
+	}
+	
+	/**
+	 * 计算API方法调用间的相似度;
+	 * */
+	public static void getAPISimilarity(String s1,String s2){
+		
+	}
+	
+	/**
+	 * NOM 表示数据采集错误,这不是一个正确的调用;
+	 * NoTrace 表示没有方法调用路径,但有调用的方法;
+	 * "<init>" 方法名为这个表示此方法为初始化方法;
+	 * 
+	 * 返回的List中只会有2项: 0项表示此方法的调用路径;1项表示此方法的方法名;
+	 * 
+	 * 其实是能抽参数之类的,但是暂时不想抽取;
+	 * */
+	public static List<String> getAPIMethod(String str){
+		List<String> list = new ArrayList<String>();
+		if("".equals(str) || str.isEmpty()){
+			return list;
+		}
+		String[] strs1 = str.split(":");
+		if(strs1.length > 1){
+			String[] strs2 = strs1[0].split("\\.");
+			if(strs2.length > 1){
+				list.add(strs2[0]);
+				list.add(strs2[1]);
+			}else{
+				list.add("NoTrace");
+				list.add(strs2[0]);
+			}
+		}else{
+			list.add("NOM");
+			list.add("NOM");
+		}
+		for(String s : list){
+			System.out.println(s);
+		}
+		return list;
 	}
 }
