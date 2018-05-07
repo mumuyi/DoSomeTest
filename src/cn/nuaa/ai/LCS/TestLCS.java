@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,10 +20,10 @@ public class TestLCS {
 	private static List<List<OpCode>> instructions = new ArrayList<List<OpCode>>();
 	
 	public static void main(String[] args) {
+		
 		/*
 		getOpCodeFromFile();
 		getInstructions();
-		
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for(int i = 0;i<instructions.size();i++){
@@ -264,7 +265,7 @@ public class TestLCS {
 	 * */
 	private static void getInstructions() {
 
-		int i = 0;
+		//int i = 0;
 		File directory = new File("F:\\data\\instruction\\");
 		File[] files = directory.listFiles();
 		for (File file : files) {
@@ -311,9 +312,9 @@ public class TestLCS {
 				}
 			}
 			instructions.add(list);
-			i++;
-			if(i==1)
-				break;
+			//i++;
+			//if(i==1)
+			//	break;
 		}
 		
 		
