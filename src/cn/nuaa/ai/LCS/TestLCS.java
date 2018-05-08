@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -46,7 +47,9 @@ public class TestLCS {
 			}
 		}
 		*/
-		getAPIMethod("org/activiti/engine/impl/test/AbstractTestCase.\"<init>\":()V");
+		
+		//getAPIMethod("org/activiti/engine/impl/test/AbstractTestCase.\"<init>\":()V");
+		System.out.println(getAPISimilarity("org/activiti/engine/impl/test/AbstractTestCase.\"<init>\":()V","java/util/ArrayList.\"<init>\":()V"));
 	}
 
 	
@@ -359,8 +362,43 @@ public class TestLCS {
 	/**
 	 * 计算API方法调用间的相似度;
 	 * */
-	public static void getAPISimilarity(String s1,String s2){
+	public static double getAPISimilarity(String s1,String s2){
+		List<String> list1 = getAPIMethod(s1);
+		List<String> list2 = getAPIMethod(s2);
+		//判断是否为空;
+		if(list1.isEmpty() || list2.isEmpty()){
+			return -1.0;
+		}
 		
+		//判断方法调用路径是否相同;
+		if(list1.get(0).equals(list2.get(0))){
+			if(list1.get(1).equals(list2.get(1))){
+				return 1.0;
+			}else{
+				return 0.8;
+			}
+		}else{
+			String[] strs1 = list1.get(0).split("/");
+			String[] strs2 = list2.get(0).split("/");
+			Set<String> set1 = new HashSet<String>(Arrays.asList(strs1));
+			Set<String> set2 = new HashSet<String>(Arrays.asList(strs2));
+			
+			Set<String> intersection = new HashSet<String>();
+			intersection.addAll(set1);
+			intersection.retainAll(set2);
+			
+			Set<String>  union = new HashSet<String>();
+			union.addAll(set1);
+			union.addAll(set2);
+			
+			double simi = 0.6*intersection.size()/union.size();
+			
+			if(list1.get(1).equals(list2.get(1)) && !list1.get(1).equals("\"<init>\"")){
+				return simi + 0.4;
+			}else{
+				return simi;
+			}
+		}
 	}
 	
 	/**
@@ -391,9 +429,9 @@ public class TestLCS {
 			list.add("NOM");
 			list.add("NOM");
 		}
-		for(String s : list){
-			System.out.println(s);
-		}
+		//for(String s : list){
+		//	System.out.println(s);
+		//}
 		return list;
 	}
 }
