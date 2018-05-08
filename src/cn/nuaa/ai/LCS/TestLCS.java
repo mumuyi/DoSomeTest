@@ -15,47 +15,53 @@ import java.util.Set;
 import java.util.Stack;
 
 public class TestLCS {
-	
+
 	private static List<OpCode> oplist = new ArrayList<OpCode>();
-	
+
 	private static List<List<OpCode>> instructions = new ArrayList<List<OpCode>>();
-	
+
+	private static final int DTW_NUM = 10;
+
 	public static void main(String[] args) {
-		
+
 		/*
 		getOpCodeFromFile();
 		getInstructions();
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
-		for(int i = 0;i<instructions.size();i++){
-			double s1 = LCSequence(instructions.get(2),instructions.get(i));
-			double s2 = LCSString(instructions.get(2),instructions.get(i));
-			double s3 = SetComputing(instructions.get(2),instructions.get(i));
+		for (int i = 0; i < instructions.size(); i++) {
+			double s1 = LCSequence(instructions.get(2), instructions.get(i));
+			double s2 = LCSString(instructions.get(2), instructions.get(i));
+			double s3 = SetComputing(instructions.get(2), instructions.get(i));
 			System.out.println();
 			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
 			s2c.setClassId(i);
-			s2c.setSimilarity(s1*0.5+s2*0.3+s3*0.2);
+			s2c.setSimilarity(s1 * 0.5 + s2 * 0.3 + s3 * 0.2);
 			simiList.add(s2c);
 		}
 		Collections.sort(simiList);
 		int i = 0;
-		for(Similarity2ClassIndex s2c : simiList){
-			System.out.println(s2c.getClassId()+"  " + s2c.getSimilarity());
+		for (Similarity2ClassIndex s2c : simiList) {
+			System.out.println(s2c.getClassId() + "  " + s2c.getSimilarity());
 			i++;
-			if(i > 11){
+			if (i > 11) {
 				break;
 			}
 		}
-		*/
+		 */
+		// getAPIMethod("org/activiti/engine/impl/test/AbstractTestCase.\"<init>\":()V");
+		// System.out.println(getAPISimilarity("org/activiti/engine/impl/test/AbstractTestCase.\"<init>\":()V","java/util/ArrayList.\"<init>\":()V"));
 		
-		//getAPIMethod("org/activiti/engine/impl/test/AbstractTestCase.\"<init>\":()V");
-		System.out.println(getAPISimilarity("org/activiti/engine/impl/test/AbstractTestCase.\"<init>\":()V","java/util/ArrayList.\"<init>\":()V"));
+		
+		//dtw();
+		double a[] = new double[] { 10, 11, 30, 11, 30, 11, 10, 10, 10, 10 };
+		double b[] = new double[] { 10, 11, 30, 11, 30, 11, 10, 10, 10, 20};
+		System.out.println(getDTWDistance(a,b));
 	}
 
-	
 	/**
 	 * 通过两个指令序列间的最长子序列来计算其相似度;
-	 * */
+	 */
 	public static double LCSequence(List<OpCode> x, List<OpCode> y) {
 
 		int[][] array = new int[x.size() + 1][y.size() + 1];// 此处的棋盘长度要比字符串长度多加1，需要多存储一行0和一列0
@@ -69,7 +75,7 @@ public class TestLCS {
 
 		for (int m = 1; m < array.length; m++) {// 利用动态规划将数组赋满值
 			for (int n = 1; n < array[m].length; n++) {
-				//if (s1[m - 1] == s2[n - 1]) {
+				// if (s1[m - 1] == s2[n - 1]) {
 				if (x.get(m - 1).getCodeId() == y.get(n - 1).getCodeId()) {
 					array[m][n] = array[m - 1][n - 1] + 1;// 动态规划公式一
 				} else {
@@ -77,21 +83,19 @@ public class TestLCS {
 				}
 			}
 		}
-		
-		
-		//for (int m = 1; m < array.length; m++) {// 利用动态规划将数组赋满值
-		//	for (int n = 1; n < array[m].length; n++) {
-		//		System.out.print(array[m][n]+" ");
-		//	}
-		//	System.out.println();
-		//}
-		
-		
+
+		// for (int m = 1; m < array.length; m++) {// 利用动态规划将数组赋满值
+		// for (int n = 1; n < array[m].length; n++) {
+		// System.out.print(array[m][n]+" ");
+		// }
+		// System.out.println();
+		// }
+
 		Stack<OpCode> stack = new Stack<OpCode>();
 		int i = x.size() - 1;
 		int j = y.size() - 1;
 
-		double cost = 0.0; 
+		double cost = 0.0;
 		int amount = 0;
 		while ((i >= 0) && (j >= 0)) {
 			if (x.get(i).getCodeId() == y.get(j).getCodeId()) {// 字符串从后开始遍历，如若相等，则存入栈中
@@ -104,40 +108,45 @@ public class TestLCS {
 				} else {
 					i--;
 				}
-				if((i >= 0) && (j >= 0)){
+				if ((i >= 0) && (j >= 0)) {
 					amount++;
-					if((x.get(i).getLevle1() == y.get(j).getLevle1())&&(x.get(i).getLevle2() == y.get(j).getLevle2())){
+					if ((x.get(i).getLevle1() == y.get(j).getLevle1())
+							&& (x.get(i).getLevle2() == y.get(j).getLevle2())) {
 						cost += 0.1;
-					}else if((x.get(i).getLevle1() == y.get(j).getLevle1())&&(x.get(i).getLevle2() != y.get(j).getLevle2())){
+					} else if ((x.get(i).getLevle1() == y.get(j).getLevle1())
+							&& (x.get(i).getLevle2() != y.get(j).getLevle2())) {
 						cost += 0.3;
-					}else if((x.get(i).getLevle1() != y.get(j).getLevle1())){
+					} else if ((x.get(i).getLevle1() != y.get(j).getLevle1())) {
 						cost += 1;
 					}
 				}
 			}
 		}
 
-		//System.out.println("最长公共子序列:");
-		//while (!stack.isEmpty()) {// 打印输出栈正好是正向输出最大的公共子序列
-		//	System.out.println(stack.pop().getName());
-		//}
-		//System.out.println();
-		if(amount == 0){
+		// System.out.println("最长公共子序列:");
+		// while (!stack.isEmpty()) {// 打印输出栈正好是正向输出最大的公共子序列
+		// System.out.println(stack.pop().getName());
+		// }
+		// System.out.println();
+		if (amount == 0) {
 			System.out.println("LCSequence Similarity: " + 0);
 			return 1.0;
-		}else{
-			System.out.println("LCSequence Similarity: " + (1-cost/amount));
-			return (1-cost/amount);
+		} else {
+			System.out.println("LCSequence Similarity: " + (1 - cost / amount));
+			return (1 - cost / amount);
 		}
 	}
 
-	public static int max(int a, int b) {// 比较(a,b)，输出大的值
+	/**
+	 * 取较大数;
+	 */
+	public static int max(int a, int b) {
 		return (a > b) ? a : b;
 	}
 
 	/**
 	 * 通过两个指令序列间的最长字串来计算其相似度;
-	 * */
+	 */
 	public static double LCSString(List<OpCode> x, List<OpCode> y) {
 		int len1, len2;
 		len1 = x.size();
@@ -181,36 +190,36 @@ public class TestLCS {
 					}
 				}
 			}
-			//for (int temp : c) {
-			//	  System.out.print(temp);
-			//}
-			//System.out.println();
+			// for (int temp : c) {
+			// System.out.print(temp);
+			// }
+			// System.out.println();
 		}
 		// 打印最长子字符串
 		int amount = 0;
 		for (j = 0; j < maxLen; j++) {
 			int amount1 = 0;
 			if (max[j] > 0) {
-				//System.out.println("最长公共公共子串 "+(j+1)+":");
-				for (i = maxIndex[j] - max[j] + 1; i <= maxIndex[j]; i++){
-					//System.out.println(x.get(i).getName());
+				// System.out.println("最长公共公共子串 "+(j+1)+":");
+				for (i = maxIndex[j] - max[j] + 1; i <= maxIndex[j]; i++) {
+					// System.out.println(x.get(i).getName());
 					amount1++;
 				}
-				if(amount1 > amount){
+				if (amount1 > amount) {
 					amount = amount1;
 				}
-				//System.out.println(" ");
+				// System.out.println(" ");
 			}
 		}
-		//System.out.println(amount);
-		System.out.println("LCSString Similarity: " + 1.0*amount/x.size());
-		return 1.0*amount/x.size();
+		// System.out.println(amount);
+		System.out.println("LCSString Similarity: " + 1.0 * amount / x.size());
+		return 1.0 * amount / x.size();
 	}
-	
+
 	/**
 	 * 从文件中读取OpCode;
-	 * */
-	public static void getOpCodeFromFile(){
+	 */
+	public static void getOpCodeFromFile() {
 		FileInputStream fis = null;
 		InputStreamReader isr = null;
 		BufferedReader br = null; // 用于包装InputStreamReader,提高处理性能。因为BufferedReader有缓冲的，而InputStreamReader没有。
@@ -231,9 +240,10 @@ public class TestLCS {
 				opc.setLevle2(Integer.parseInt(str1[4]));
 				oplist.add(opc);
 			}
-			//for(OpCode op : oplist){
-			//	System.out.println(op.getCodeId() + " " + op.getCode() + " " + op.getName() + " " + op.getLevle1() + " " + op.getLevle2());
-			//}
+			// for(OpCode op : oplist){
+			// System.out.println(op.getCodeId() + " " + op.getCode() + " " +
+			// op.getName() + " " + op.getLevle1() + " " + op.getLevle2());
+			// }
 		} catch (FileNotFoundException e) {
 			System.out.println("找不到指定文件");
 		} catch (IOException e) {
@@ -249,26 +259,25 @@ public class TestLCS {
 			}
 		}
 	}
-	
+
 	/**
 	 * 通过OpCode的Name获取他的ID;
-	 * */
-	public static int getOpCodeID(String opc){
-		for(OpCode op : oplist){
-			if(opc.equals(op.getName())){
+	 */
+	public static int getOpCodeID(String opc) {
+		for (OpCode op : oplist) {
+			if (opc.equals(op.getName())) {
 				return op.getCodeId();
 			}
 		}
 		return -1;
 	}
-	
-	
+
 	/**
 	 * 从反编译文件/指令文件中获取数据;
-	 * */
+	 */
 	private static void getInstructions() {
 
-		//int i = 0;
+		// int i = 0;
 		File directory = new File("F:\\data\\instruction\\");
 		File[] files = directory.listFiles();
 		for (File file : files) {
@@ -282,17 +291,20 @@ public class TestLCS {
 				fis = new FileInputStream("F:\\data\\instruction\\" + filename);
 				isr = new InputStreamReader(fis);
 				br = new BufferedReader(isr);
-				//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + filename);
+				// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" +
+				// filename);
 				while ((str = br.readLine()) != null) {
-					//System.out.println(str);
-					//System.out.println(getOpCodeID(str));
-					if(getOpCodeID(str) != -1){
+					// System.out.println(str);
+					// System.out.println(getOpCodeID(str));
+					if (getOpCodeID(str) != -1) {
 						OpCode op = new OpCode(oplist.get(getOpCodeID(str)));
 						list.add(op);
-					}else{
+					} else {
 						String[] strs = str.split(" ");
-						if(strs.length > 1){
-							if(strs[0].equals("invokevirtual")||strs[0].equals("invokespecial")||strs[0].equals("invokestatic")||strs[0].equals("invokeinterface")||strs[0].equals("invokedynamic")){
+						if (strs.length > 1) {
+							if (strs[0].equals("invokevirtual") || strs[0].equals("invokespecial")
+									|| strs[0].equals("invokestatic") || strs[0].equals("invokeinterface")
+									|| strs[0].equals("invokedynamic")) {
 								OpCode op = new OpCode(oplist.get(getOpCodeID(strs[0])));
 								System.out.println(strs[1]);
 								op.setInvokedMethod(strs[1]);
@@ -315,129 +327,172 @@ public class TestLCS {
 				}
 			}
 			instructions.add(list);
-			//i++;
-			//if(i==1)
-			//	break;
+			// i++;
+			// if(i==1)
+			// break;
 		}
-		
-		
-		for(OpCode op : instructions.get(0)){
-			System.out.println(op.getName()+" "+op.getInvokedMethod());
+
+		for (OpCode op : instructions.get(0)) {
+			System.out.println(op.getName() + " " + op.getInvokedMethod());
 		}
 	}
-	
+
 	/**
 	 * 计算集合间的相似度;
-	 * */
-	public static double SetComputing(List<OpCode> x, List<OpCode> y){
-		Set<Integer> xSet = new HashSet<Integer>(); 
-		Set<Integer> ySet = new HashSet<Integer>(); 
-		for(OpCode op : x){
+	 */
+	public static double SetComputing(List<OpCode> x, List<OpCode> y) {
+		Set<Integer> xSet = new HashSet<Integer>();
+		Set<Integer> ySet = new HashSet<Integer>();
+		for (OpCode op : x) {
 			xSet.add(op.getCodeId());
 		}
-		for(OpCode op : y){
+		for (OpCode op : y) {
 			ySet.add(op.getCodeId());
 		}
 
 		Set<Integer> intersection = new HashSet<Integer>();
 		intersection.addAll(xSet);
 		intersection.retainAll(ySet);
-		
-		Set<Integer>  union = new HashSet<Integer>();
+
+		Set<Integer> union = new HashSet<Integer>();
 		union.addAll(xSet);
 		union.addAll(ySet);
-		
-		
-		
-		//System.out.println(xSet);
-		//System.out.println(ySet);
-		//System.out.println(intersection);
-		//System.out.println(union);
-		
-		System.out.println("Set Similarity: " + 1.0*intersection.size()/union.size());
-		
-		return 1.0*intersection.size()/union.size();
+
+		// System.out.println(xSet);
+		// System.out.println(ySet);
+		// System.out.println(intersection);
+		// System.out.println(union);
+
+		System.out.println("Set Similarity: " + 1.0 * intersection.size() / union.size());
+
+		return 1.0 * intersection.size() / union.size();
 	}
-	
+
 	/**
 	 * 计算API方法调用间的相似度;
-	 * */
-	public static double getAPISimilarity(String s1,String s2){
+	 */
+	public static double getAPISimilarity(String s1, String s2) {
 		List<String> list1 = getAPIMethod(s1);
 		List<String> list2 = getAPIMethod(s2);
-		//判断是否为空;
-		if(list1.isEmpty() || list2.isEmpty()){
+		// 判断是否为空;
+		if (list1.isEmpty() || list2.isEmpty()) {
 			return -1.0;
 		}
-		
-		//判断方法调用路径是否相同;
-		if(list1.get(0).equals(list2.get(0)) && !list1.get(0).equals("NoTrace")){
-			if(list1.get(1).equals(list2.get(1))){
+
+		// 判断方法调用路径是否相同;
+		if (list1.get(0).equals(list2.get(0)) && !list1.get(0).equals("NoTrace")) {
+			if (list1.get(1).equals(list2.get(1))) {
 				return 1.0;
-			}else{
+			} else {
 				return 0.8;
 			}
-		}else if(list1.get(0).equals(list2.get(0)) && list1.get(0).equals("NoTrace")){
-			if(list1.get(1).equals(list2.get(1))){
+		} else if (list1.get(0).equals(list2.get(0)) && list1.get(0).equals("NoTrace")) {
+			if (list1.get(1).equals(list2.get(1))) {
 				return 0.8;
-			}else{
+			} else {
 				return 0.0;
 			}
-		}else{
+		} else {
 			String[] strs1 = list1.get(0).split("/");
 			String[] strs2 = list2.get(0).split("/");
 			Set<String> set1 = new HashSet<String>(Arrays.asList(strs1));
 			Set<String> set2 = new HashSet<String>(Arrays.asList(strs2));
-			
+
 			Set<String> intersection = new HashSet<String>();
 			intersection.addAll(set1);
 			intersection.retainAll(set2);
-			
-			Set<String>  union = new HashSet<String>();
+
+			Set<String> union = new HashSet<String>();
 			union.addAll(set1);
 			union.addAll(set2);
-			
-			double simi = 0.6*intersection.size()/union.size();
-			
-			if(list1.get(1).equals(list2.get(1)) && !list1.get(1).equals("\"<init>\"")){
+
+			double simi = 0.6 * intersection.size() / union.size();
+
+			if (list1.get(1).equals(list2.get(1)) && !list1.get(1).equals("\"<init>\"")) {
 				return simi + 0.4;
-			}else{
+			} else {
 				return simi;
 			}
 		}
 	}
-	
+
 	/**
-	 * NOM 表示数据采集错误,这不是一个正确的调用;
-	 * NoTrace 表示没有方法调用路径,但有调用的方法;
-	 * "<init>" 方法名为这个表示此方法为初始化方法;
+	 * NOM 表示数据采集错误,这不是一个正确的调用; NoTrace 表示没有方法调用路径,但有调用的方法; "<init>"
+	 * 方法名为这个表示此方法为初始化方法;
 	 * 
 	 * 返回的List中只会有2项: 0项表示此方法的调用路径;1项表示此方法的方法名;
 	 * 
 	 * 其实是能抽参数之类的,但是暂时不想抽取;
-	 * */
-	public static List<String> getAPIMethod(String str){
+	 */
+	public static List<String> getAPIMethod(String str) {
 		List<String> list = new ArrayList<String>();
-		if("".equals(str) || str.isEmpty()){
+		if ("".equals(str) || str.isEmpty()) {
 			return list;
 		}
 		String[] strs1 = str.split(":");
-		if(strs1.length > 1){
+		if (strs1.length > 1) {
 			String[] strs2 = strs1[0].split("\\.");
-			if(strs2.length > 1){
+			if (strs2.length > 1) {
 				list.add(strs2[0]);
 				list.add(strs2[1]);
-			}else{
+			} else {
 				list.add("NoTrace");
 				list.add(strs2[0]);
 			}
-		}else{
+		} else {
 			list.add("NOM");
 			list.add("NOM");
 		}
-		//for(String s : list){
-		//	System.out.println(s);
-		//}
+		// for(String s : list){
+		// System.out.println(s);
+		// }
 		return list;
+	}
+
+	/**
+	 * 取三个数中的最小数;
+	 * */
+	public static double getMin(double a, double b, double c) {
+		double min = a;
+		if (b > a)
+			min = a;
+		else if (c > b) {
+			min = b;
+		} else {
+			min = c;
+		}
+		return min;
+	}
+
+	/**
+	 * 获取序列之间的DTW距离;
+	 * */
+	public static double getDTWDistance(double[] seqa, double[] seqb) {
+		double distance = 0;
+		int lena = seqa.length;
+		int lenb = seqb.length;
+		double[][] c = new double[lena][lenb];
+		for (int i = 0; i < lena; i++) {
+			for (int j = 0; j < lenb; j++) {
+				c[i][j] = 1;
+			}
+		}
+		for (int i = 0; i < lena; i++) {
+			for (int j = 0; j < lenb; j++) {
+				double tmp = (seqa[i] - seqb[j]) * (seqa[i] - seqb[j]);
+				if (j == 0 && i == 0)
+					c[i][j] = tmp;
+				else if (j > 0)
+					c[i][j] = c[i][j - 1] + tmp;
+				if (i > 0) {
+					if (j == 0)
+						c[i][j] = tmp + c[i - 1][j];
+					else
+						c[i][j] = tmp + getMin(c[i][j - 1], c[i - 1][j - 1], c[i - 1][j]);
+				}
+			}
+		}
+		distance = c[lena - 1][lenb - 1];
+		return distance;
 	}
 }
