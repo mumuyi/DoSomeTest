@@ -371,11 +371,17 @@ public class TestLCS {
 		}
 		
 		//判断方法调用路径是否相同;
-		if(list1.get(0).equals(list2.get(0))){
+		if(list1.get(0).equals(list2.get(0)) && !list1.get(0).equals("NoTrace")){
 			if(list1.get(1).equals(list2.get(1))){
 				return 1.0;
 			}else{
 				return 0.8;
+			}
+		}else if(list1.get(0).equals(list2.get(0)) && list1.get(0).equals("NoTrace")){
+			if(list1.get(1).equals(list2.get(1))){
+				return 0.8;
+			}else{
+				return 0.0;
 			}
 		}else{
 			String[] strs1 = list1.get(0).split("/");
