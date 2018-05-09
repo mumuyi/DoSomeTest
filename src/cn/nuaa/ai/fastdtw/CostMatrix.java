@@ -1,19 +1,10 @@
-/*
- * CostMatrix.java   Jul 14, 2004
- *
- * Copyright (c) 2004 Stan Salvador
- * stansalvador@hotmail.com
- */
-
 package cn.nuaa.ai.fastdtw;
 
+interface CostMatrix {
+	public void put(int col, int row, double value);
 
-interface CostMatrix
-{
-   public void put(int col, int row, double value);
+	public double get(int col, int row);
 
-   public double get(int col, int row);
+	public int size();
 
-   public int size();
-
-}  // end interface CostMatrix
+} // end interface CostMatrix

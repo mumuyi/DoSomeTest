@@ -14,30 +14,43 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
+import cn.nuaa.ai.fastdtw.FastDTWTest;
+
 public class TestLCS {
 
 	private static List<OpCode> oplist = new ArrayList<OpCode>();
 
 	private static List<List<OpCode>> instructions = new ArrayList<List<OpCode>>();
 
-	private static final int DTW_NUM = 10;
+	public static void main(String[] args) throws Exception {
 
-	public static void main(String[] args) {
-
-		/*
+		
 		getOpCodeFromFile();
 		getInstructions();
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
+		
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < instructions.size(); i++) {
-			double s1 = LCSequence(instructions.get(2), instructions.get(i));
-			double s2 = LCSString(instructions.get(2), instructions.get(i));
-			double s3 = SetComputing(instructions.get(2), instructions.get(i));
+			//第一种计算距离的方法;
+			/*
+			double s1 = LCSequence(instructions.get(3), instructions.get(i));
+			double s2 = LCSString(instructions.get(3), instructions.get(i));
+			double s3 = SetComputing(instructions.get(3), instructions.get(i));
 			System.out.println();
 			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
 			s2c.setClassId(i);
 			s2c.setSimilarity(s1 * 0.5 + s2 * 0.3 + s3 * 0.2);
 			simiList.add(s2c);
+			*/
+			
+			//第二种计算距离的方法;
+			
+			double distance = FastDTWTest.getMyDTWDistance(instructions.get(3),instructions.get(i));
+			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
+			s2c.setClassId(i);
+			s2c.setSimilarity(-1.0 * distance);
+			simiList.add(s2c);
+			
 		}
 		Collections.sort(simiList);
 		int i = 0;
@@ -48,15 +61,23 @@ public class TestLCS {
 				break;
 			}
 		}
-		 */
+		 
 		// getAPIMethod("org/activiti/engine/impl/test/AbstractTestCase.\"<init>\":()V");
 		// System.out.println(getAPISimilarity("org/activiti/engine/impl/test/AbstractTestCase.\"<init>\":()V","java/util/ArrayList.\"<init>\":()V"));
 		
 		
-		//dtw();
-		double a[] = new double[] { 10, 11, 30, 11, 30, 11, 10, 10, 10, 10 };
-		double b[] = new double[] { 10, 11, 30, 11, 30, 11, 10, 10, 10, 20};
-		System.out.println(getDTWDistance(a,b));
+		//double a[] = new double[] { 10, 11, 30, 11, 30, 11, 10, 10, 10, 10 };
+		//double b[] = new double[] { 10, 11, 30, 11, 30, 11, 10, 10, 10, 20};
+		//System.out.println(getDTWDistance(a,b));
+		
+		/*
+		try {
+			FastDTWTest.getMyDTWDistance(instructions.get(0),instructions.get(1));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		*/
 	}
 
 	/**
@@ -271,13 +292,22 @@ public class TestLCS {
 		}
 		return -1;
 	}
+	
+	public static OpCode getOpCodeFromID(int id){
+		for(OpCode op : oplist){
+			if(op.getCodeId() == id)
+				return op;
+		}
+		return null;
+	}
+	
 
 	/**
 	 * 从反编译文件/指令文件中获取数据;
 	 */
 	private static void getInstructions() {
 
-		// int i = 0;
+		//int i = 0;
 		File directory = new File("F:\\data\\instruction\\");
 		File[] files = directory.listFiles();
 		for (File file : files) {
@@ -306,7 +336,7 @@ public class TestLCS {
 									|| strs[0].equals("invokestatic") || strs[0].equals("invokeinterface")
 									|| strs[0].equals("invokedynamic")) {
 								OpCode op = new OpCode(oplist.get(getOpCodeID(strs[0])));
-								System.out.println(strs[1]);
+								//System.out.println(strs[1]);
 								op.setInvokedMethod(strs[1]);
 								list.add(op);
 							}
@@ -327,14 +357,14 @@ public class TestLCS {
 				}
 			}
 			instructions.add(list);
-			// i++;
-			// if(i==1)
-			// break;
+			//i++;
+			//if(i==2)
+			//  break;
 		}
 
-		for (OpCode op : instructions.get(0)) {
-			System.out.println(op.getName() + " " + op.getInvokedMethod());
-		}
+		//for (OpCode op : instructions.get(0)) {
+		//	System.out.println(op.getName() + " " + op.getInvokedMethod());
+		//}
 	}
 
 	/**
