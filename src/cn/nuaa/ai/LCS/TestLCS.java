@@ -246,7 +246,7 @@ public class TestLCS {
 		BufferedReader br = null; // 用于包装InputStreamReader,提高处理性能。因为BufferedReader有缓冲的，而InputStreamReader没有。
 		try {
 			String str = "";
-			fis = new FileInputStream("C:\\Users\\ai\\Desktop\\opcode.txt");// FileInputStream
+			fis = new FileInputStream("F:\\Java\\DoSomeTest\\OpCode\\opcode.txt");// FileInputStream
 			// 从文件系统中的某个文件中获取字节
 			isr = new InputStreamReader(fis);// InputStreamReader 是字节流通向字符流的桥梁,
 			br = new BufferedReader(isr);// 从字符输入流中读取文件中的内容,封装了一个new
