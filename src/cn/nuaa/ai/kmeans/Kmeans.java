@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cn.nuaa.ai.LCS.InstructionSequence;
 import cn.nuaa.ai.LCS.TestLCS;
 
 public class Kmeans extends KmeansUtils<InstructionSequence> {
@@ -75,7 +76,7 @@ public class Kmeans extends KmeansUtils<InstructionSequence> {
 				if (o1.getIns().get(i).getCodeId() == 182 || o1.getIns().get(i).getCodeId() == 183
 						|| o1.getIns().get(i).getCodeId() == 184 || o1.getIns().get(i).getCodeId() == 185
 						|| o1.getIns().get(i).getCodeId() == 186) {
-					if (o1.getIns().get(i).getName().equals(o2.getIns().get(i).getName())) {
+					if (o1.getIns().get(i).getInvokedMethod().equals(o2.getIns().get(i).getInvokedMethod())) {
 						continue;
 					} else {
 						return false;

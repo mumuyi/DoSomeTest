@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.Stack;
 
 import cn.nuaa.ai.fastdtw.FastDTWTest;
-import cn.nuaa.ai.kmeans.InstructionSequence;
 
 public class TestLCS {
 

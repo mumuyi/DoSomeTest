@@ -1,8 +1,6 @@
-package cn.nuaa.ai.kmeans;
+package cn.nuaa.ai.LCS;
 
 import java.util.List;
-
-import cn.nuaa.ai.LCS.OpCode;
 
 public class InstructionSequence {
 	private List<OpCode> ins;
