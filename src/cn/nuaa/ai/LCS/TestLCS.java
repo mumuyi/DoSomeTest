@@ -15,47 +15,50 @@ import java.util.Set;
 import java.util.Stack;
 
 import cn.nuaa.ai.fastdtw.FastDTWTest;
+import cn.nuaa.ai.kmeans.InstructionSequence;
 
 public class TestLCS {
 
 	private static List<OpCode> oplist = new ArrayList<OpCode>();
 
-	private static List<List<OpCode>> instructions = new ArrayList<List<OpCode>>();
+	private static List<InstructionSequence> instructions = new ArrayList<InstructionSequence>();
+	
+	private static File[] insFiles;
 
 	public static void main(String[] args) throws Exception {
 
 		
 		getOpCodeFromFile();
-		getInstructions();
+		getInstructionsFromFile();
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
 		
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < instructions.size(); i++) {
 			//第一种计算距离的方法;
-			/*
-			double s1 = LCSequence(instructions.get(3), instructions.get(i));
-			double s2 = LCSString(instructions.get(3), instructions.get(i));
-			double s3 = SetComputing(instructions.get(3), instructions.get(i));
+			
+			double s1 = LCSequence(instructions.get(1), instructions.get(i));
+			double s2 = LCSString(instructions.get(1), instructions.get(i));
+			double s3 = SetComputing(instructions.get(1), instructions.get(i));
 			System.out.println();
 			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
 			s2c.setClassId(i);
 			s2c.setSimilarity(s1 * 0.5 + s2 * 0.3 + s3 * 0.2);
 			simiList.add(s2c);
-			*/
+			
 			
 			//第二种计算距离的方法;
-			
-			double distance = FastDTWTest.getMyDTWDistance(instructions.get(3),instructions.get(i));
+			/*
+			double distance = FastDTWTest.getMyDTWDistance(instructions.get(1).getIns(),instructions.get(i).getIns());
 			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
 			s2c.setClassId(i);
 			s2c.setSimilarity(-1.0 * distance);
 			simiList.add(s2c);
-			
+			*/
 		}
 		Collections.sort(simiList);
 		int i = 0;
 		for (Similarity2ClassIndex s2c : simiList) {
-			System.out.println(s2c.getClassId() + "  " + s2c.getSimilarity());
+			System.out.println(s2c.getClassId() + "  " + s2c.getSimilarity() + "   " + insFiles[s2c.getClassId()]);
 			i++;
 			if (i > 11) {
 				break;
@@ -83,9 +86,9 @@ public class TestLCS {
 	/**
 	 * 通过两个指令序列间的最长子序列来计算其相似度;
 	 */
-	public static double LCSequence(List<OpCode> x, List<OpCode> y) {
+	public static double LCSequence(InstructionSequence x, InstructionSequence y) {
 
-		int[][] array = new int[x.size() + 1][y.size() + 1];// 此处的棋盘长度要比字符串长度多加1，需要多存储一行0和一列0
+		int[][] array = new int[x.getIns().size() + 1][y.getIns().size() + 1];// 此处的棋盘长度要比字符串长度多加1，需要多存储一行0和一列0
 
 		for (int j = 0; j < array[0].length; j++) {// 第0行第j列全部赋值为0
 			array[0][j] = 0;
@@ -97,7 +100,7 @@ public class TestLCS {
 		for (int m = 1; m < array.length; m++) {// 利用动态规划将数组赋满值
 			for (int n = 1; n < array[m].length; n++) {
 				// if (s1[m - 1] == s2[n - 1]) {
-				if (x.get(m - 1).getCodeId() == y.get(n - 1).getCodeId()) {
+				if (x.getIns().get(m - 1).getCodeId() == y.getIns().get(n - 1).getCodeId()) {
 					array[m][n] = array[m - 1][n - 1] + 1;// 动态规划公式一
 				} else {
 					array[m][n] = max(array[m - 1][n], array[m][n - 1]);// 动态规划公式二
@@ -113,14 +116,14 @@ public class TestLCS {
 		// }
 
 		Stack<OpCode> stack = new Stack<OpCode>();
-		int i = x.size() - 1;
-		int j = y.size() - 1;
+		int i = x.getIns().size() - 1;
+		int j = y.getIns().size() - 1;
 
 		double cost = 0.0;
 		int amount = 0;
 		while ((i >= 0) && (j >= 0)) {
-			if (x.get(i).getCodeId() == y.get(j).getCodeId()) {// 字符串从后开始遍历，如若相等，则存入栈中
-				stack.push(x.get(i));
+			if (x.getIns().get(i).getCodeId() == y.getIns().get(j).getCodeId()) {// 字符串从后开始遍历，如若相等，则存入栈中
+				stack.push(x.getIns().get(i));
 				i--;
 				j--;
 			} else {
@@ -131,13 +134,13 @@ public class TestLCS {
 				}
 				if ((i >= 0) && (j >= 0)) {
 					amount++;
-					if ((x.get(i).getLevle1() == y.get(j).getLevle1())
-							&& (x.get(i).getLevle2() == y.get(j).getLevle2())) {
+					if ((x.getIns().get(i).getLevle1() == y.getIns().get(j).getLevle1())
+							&& (x.getIns().get(i).getLevle2() == y.getIns().get(j).getLevle2())) {
 						cost += 0.1;
-					} else if ((x.get(i).getLevle1() == y.get(j).getLevle1())
-							&& (x.get(i).getLevle2() != y.get(j).getLevle2())) {
+					} else if ((x.getIns().get(i).getLevle1() == y.getIns().get(j).getLevle1())
+							&& (x.getIns().get(i).getLevle2() != y.getIns().get(j).getLevle2())) {
 						cost += 0.3;
-					} else if ((x.get(i).getLevle1() != y.get(j).getLevle1())) {
+					} else if ((x.getIns().get(i).getLevle1() != y.getIns().get(j).getLevle1())) {
 						cost += 1;
 					}
 				}
@@ -168,10 +171,10 @@ public class TestLCS {
 	/**
 	 * 通过两个指令序列间的最长字串来计算其相似度;
 	 */
-	public static double LCSString(List<OpCode> x, List<OpCode> y) {
+	public static double LCSString(InstructionSequence x, InstructionSequence y) {
 		int len1, len2;
-		len1 = x.size();
-		len2 = y.size();
+		len1 = x.getIns().size();
+		len2 = y.getIns().size();
 		int maxLen = len1 > len2 ? len1 : len2;
 
 		int[] max = new int[maxLen];// 保存最长子串长度的数组
@@ -181,7 +184,7 @@ public class TestLCS {
 		int i, j;
 		for (i = 0; i < len2; i++) {
 			for (j = len1 - 1; j >= 0; j--) {
-				if (y.get(i).getCodeId() == x.get(j).getCodeId()) {
+				if (y.getIns().get(i).getCodeId() == x.getIns().get(j).getCodeId()) {
 					if ((i == 0) || (j == 0))
 						c[j] = 1;
 					else
@@ -233,8 +236,8 @@ public class TestLCS {
 			}
 		}
 		// System.out.println(amount);
-		System.out.println("LCSString Similarity: " + 1.0 * amount / x.size());
-		return 1.0 * amount / x.size();
+		System.out.println("LCSString Similarity: " + 1.0 * amount / x.getIns().size());
+		return 1.0 * amount / x.getIns().size();
 	}
 
 	/**
@@ -305,17 +308,18 @@ public class TestLCS {
 	/**
 	 * 从反编译文件/指令文件中获取数据;
 	 */
-	private static void getInstructions() {
+	public static void getInstructionsFromFile() {
 
 		//int i = 0;
 		File directory = new File("F:\\data\\instruction\\");
-		File[] files = directory.listFiles();
-		for (File file : files) {
+		insFiles = directory.listFiles();
+		for (File file : insFiles) {
 			FileInputStream fis = null;
 			InputStreamReader isr = null;
 			BufferedReader br = null;
 			String filename = file.getName();
 			List<OpCode> list = new ArrayList<OpCode>();
+			InstructionSequence instrs = new InstructionSequence();
 			try {
 				String str = "";
 				fis = new FileInputStream("F:\\data\\instruction\\" + filename);
@@ -356,7 +360,9 @@ public class TestLCS {
 					e.printStackTrace();
 				}
 			}
-			instructions.add(list);
+			instrs.setIns(list);
+			instrs.setFileName(filename);
+			instructions.add(instrs);
 			//i++;
 			//if(i==2)
 			//  break;
@@ -370,13 +376,13 @@ public class TestLCS {
 	/**
 	 * 计算集合间的相似度;
 	 */
-	public static double SetComputing(List<OpCode> x, List<OpCode> y) {
+	public static double SetComputing(InstructionSequence x, InstructionSequence y) {
 		Set<Integer> xSet = new HashSet<Integer>();
 		Set<Integer> ySet = new HashSet<Integer>();
-		for (OpCode op : x) {
+		for (OpCode op : x.getIns()) {
 			xSet.add(op.getCodeId());
 		}
-		for (OpCode op : y) {
+		for (OpCode op : y.getIns()) {
 			ySet.add(op.getCodeId());
 		}
 
@@ -524,5 +530,21 @@ public class TestLCS {
 		}
 		distance = c[lena - 1][lenb - 1];
 		return distance;
+	}
+
+	public static List<OpCode> getOplist() {
+		return oplist;
+	}
+
+	public static void setOplist(List<OpCode> oplist) {
+		TestLCS.oplist = oplist;
+	}
+
+	public static List<InstructionSequence> getInstructions() {
+		return instructions;
+	}
+
+	public static void setInstructions(List<InstructionSequence> instructions) {
+		TestLCS.instructions = instructions;
 	}
 }
