@@ -309,7 +309,7 @@ public class TestLCS {
 	 */
 	public static void getInstructionsFromFile() {
 
-		int i = 0;
+		//int i = 0;
 		File directory = new File("F:\\data\\instruction\\");
 		insFiles = directory.listFiles();
 		for (File file : insFiles) {
@@ -362,9 +362,9 @@ public class TestLCS {
 			instrs.setIns(list);
 			instrs.setFileName(filename);
 			instructions.add(instrs);
-			i++;
-			if(i==2)
-			  break;
+			//i++;
+			//if(i==2)
+			//  break;
 		}
 
 		//for (OpCode op : instructions.get(0)) {
@@ -546,4 +546,13 @@ public class TestLCS {
 	public static void setInstructions(List<InstructionSequence> instructions) {
 		TestLCS.instructions = instructions;
 	}
+
+	public static File[] getInsFiles() {
+		return insFiles;
+	}
+
+	public static void setInsFiles(File[] insFiles) {
+		TestLCS.insFiles = insFiles;
+	}
+	
 }
