@@ -8,7 +8,7 @@ import java.util.Map;
 public class NgramOverlap {
 	public static void main(String[] args) {
 		TestLCS.getOpCodeFromFile();
-		TestLCS.getInstructionsFromFile();
+		TestLCS.getInstructionsFromFile("F:\\data\\instruction\\");
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
 		
 		Map<Integer,Integer> map = OverLap(TestLCS.getInstructions().get(1),TestLCS.getInstructions().get(2));

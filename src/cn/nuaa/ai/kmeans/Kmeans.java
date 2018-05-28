@@ -17,7 +17,7 @@ public class Kmeans extends KmeansUtils<InstructionSequence> {
 		Kmeans km = new Kmeans();
 		
 		TestLCS.getOpCodeFromFile();
-		TestLCS.getInstructionsFromFile();
+		TestLCS.getInstructionsFromFile("F:\\data\\instruction\\");
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
 		
 		for(InstructionSequence ins : TestLCS.getInstructions()){

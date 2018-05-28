@@ -16,12 +16,19 @@ public class BWT {
 	private static final Set<Integer> invSet = new HashSet<Integer>(){
 		private static final long serialVersionUID = -8723339838495980395L;
 	{add(182);add(183);add(184);add(185);add(186);}};
+
+	private static int controlGroupNum = 19042;
 	
 	public static void main(String[] args) {
+		
+		long startTime = System.currentTimeMillis();//记录开始时间
+		
 		TestLCS.getOpCodeFromFile();
-		TestLCS.getInstructionsFromFile();
+		TestLCS.getInstructionsFromFile("F:\\data\\jarFiles\\Top10000\\instruction\\");
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
 
+		long readTime=System.currentTimeMillis();//记录结束时间
+		
 		//InstructionSequence is = new InstructionSequence(TestLCS.getInstructions().get(0));
 		//getFirstLastRow(is);
 		
@@ -61,7 +68,7 @@ public class BWT {
 			List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
 			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
 			s2c.setClassId(i);
-			s2c.setSimilarity(BWTSimilarity(firstRowMap, lastRowMap,TestLCS.getInstructions().get(0).getIns())/TestLCS.getInstructions().get(0).getIns().size());
+			s2c.setSimilarity((BWTSimilarity(firstRowMap, lastRowMap,TestLCS.getInstructions().get(controlGroupNum).getIns())+1)/TestLCS.getInstructions().get(controlGroupNum).getIns().size());
 			simiList.add(s2c);
 			
 			FirstLastRow.clear();
@@ -75,6 +82,14 @@ public class BWT {
 				break;
 			}
 		}
+		
+		long endTime=System.currentTimeMillis();//记录结束时间 
+		
+		float readinTime=(float)(readTime - startTime)/1000;  
+		float excTime=(float)(endTime - readTime)/1000;  
+		
+		System.out.println("read in time："+readinTime);
+		System.out.println("process time："+excTime); 
 	}
 	
 	

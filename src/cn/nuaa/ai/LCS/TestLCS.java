@@ -28,7 +28,7 @@ public class TestLCS {
 
 		
 		getOpCodeFromFile();
-		getInstructionsFromFile();
+		getInstructionsFromFile("F:\\data\\instruction\\");
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
 		
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
@@ -307,10 +307,10 @@ public class TestLCS {
 	/**
 	 * 从反编译文件/指令文件中获取数据;
 	 */
-	public static void getInstructionsFromFile() {
+	public static void getInstructionsFromFile(String filePath) {
 
 		//int i = 0;
-		File directory = new File("F:\\data\\instruction\\");
+		File directory = new File(filePath);
 		insFiles = directory.listFiles();
 		for (File file : insFiles) {
 			FileInputStream fis = null;
@@ -321,7 +321,7 @@ public class TestLCS {
 			InstructionSequence instrs = new InstructionSequence();
 			try {
 				String str = "";
-				fis = new FileInputStream("F:\\data\\instruction\\" + filename);
+				fis = new FileInputStream(filePath + filename);
 				isr = new InputStreamReader(fis);
 				br = new BufferedReader(isr);
 				// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" +
