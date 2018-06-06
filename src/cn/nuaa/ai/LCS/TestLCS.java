@@ -363,7 +363,7 @@ public class TestLCS {
 			instrs.setFileName(filename);
 			instructions.add(instrs);
 			//i++;
-			//if(i==2)
+			//if(i==1)
 			//  break;
 		}
 

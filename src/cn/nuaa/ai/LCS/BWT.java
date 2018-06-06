@@ -17,13 +17,14 @@ public class BWT {
 		private static final long serialVersionUID = -8723339838495980395L;
 	{add(182);add(183);add(184);add(185);add(186);}};
 
-	private static int controlGroupNum = 19042;
+	private static int controlGroupNum = 1;
 	
 	public static void main(String[] args) {
 		
 		long startTime = System.currentTimeMillis();//记录开始时间
 		
 		TestLCS.getOpCodeFromFile();
+		//TestLCS.getInstructionsFromFile("F:\\data\\jarFiles\\Top10000\\instruction\\");
 		TestLCS.getInstructionsFromFile("F:\\data\\jarFiles\\Top10000\\instruction\\");
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
 
@@ -58,6 +59,27 @@ public class BWT {
 			System.out.print(ops.getCodeId() + " ");
 		}
 		*/
+		/*
+		System.out.println();
+		for (OpCode ops : TestLCS.getInstructions().get(0).getIns()) {
+			System.out.println(ops.getCodeId() + " " + ops.getName());
+		}
+		*/
+		/*
+		for(int i = 0; i < 11;i++){
+			for(int j = 0;j < 11;j++){
+				for(OpCode op : TestLCS.getOplist()){
+					if(op.getLevle1() == i && op.getLevle2() == j){
+						System.out.print(op.getName() + " ");
+					}
+				}
+				System.out.println();
+			}
+		}
+		*/
+		
+		
+		
 		
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
@@ -70,6 +92,19 @@ public class BWT {
 			s2c.setClassId(i);
 			s2c.setSimilarity((BWTSimilarity(firstRowMap, lastRowMap,TestLCS.getInstructions().get(controlGroupNum).getIns())+1)/TestLCS.getInstructions().get(controlGroupNum).getIns().size());
 			simiList.add(s2c);
+			
+			/*
+			System.out.println();
+			for(OpCode ops : FirstLastRow.get(0)){
+				System.out.println(ops.getCodeId() + " ");
+			}
+			System.out.println();
+			System.out.println();
+			for(OpCode ops : FirstLastRow.get(1)){
+				System.out.println(ops.getCodeId() + " ");
+			}
+			System.out.println();
+			*/
 			
 			FirstLastRow.clear();
 		}
