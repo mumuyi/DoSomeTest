@@ -23,7 +23,7 @@ public class BWT {
 		private static final long serialVersionUID = -8723339838495980395L;
 	{add(182);add(183);add(184);add(185);add(186);}};
 
-	private static int controlGroupNum = 1;
+	private static int controlGroupNum = 0;
 
 	private static List<InstructionSequence> LCsequence = new ArrayList<InstructionSequence>();
 	
@@ -35,7 +35,7 @@ public class BWT {
 		TestLCS.getOpCodeFromFile();
 		TestLCS.getInstructionsFromFile("F:\\data\\jarFiles\\Top10000\\instruction\\");
 		//从LC文件中读取LC序列;第一种计算方法不需要读取这个信息,第二种计算方法才需要;
-		getInstructionsFromLCFile("F:\\data\\jarFiles\\Top10000\\LCsequence\\");
+		//getInstructionsFromLCFile("F:\\data\\jarFiles\\Top10000\\LCsequence\\");
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
 
 		long readTime=System.currentTimeMillis();//记录结束时间
@@ -90,17 +90,25 @@ public class BWT {
 		
 		
 		//直接计算LC;
-		/*
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
 			InstructionSequence is = new InstructionSequence(TestLCS.getInstructions().get(i));
-			getFirstLastRow(is);
+			//正序查找;
+			//getFirstLastRow(is);
+			//逆序查找;
+			InstructionSequence is1 = new InstructionSequence();
+			is1.setFileName(is.getFileName());
+			is1.setIns(ReverseNarration(is.getIns()));
+			getFirstLastRow(is1);
 			
 			List<Integer> firstRowMap = mapRows(FirstLastRow.get(0));
 			List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
 			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
 			s2c.setClassId(i);
-			s2c.setSimilarity((BWTSimilarity(firstRowMap, lastRowMap,TestLCS.getInstructions().get(controlGroupNum).getIns())+1)/TestLCS.getInstructions().get(controlGroupNum).getIns().size());
+			//正序查找;
+			//s2c.setSimilarity((BWTSimilarity(firstRowMap, lastRowMap,TestLCS.getInstructions().get(controlGroupNum).getIns())+1)/TestLCS.getInstructions().get(controlGroupNum).getIns().size());
+			//逆序查找;
+			s2c.setSimilarity((BWTSimilarity(firstRowMap, lastRowMap,ReverseNarration(TestLCS.getInstructions().get(controlGroupNum).getIns()))+1)/TestLCS.getInstructions().get(controlGroupNum).getIns().size());
 			simiList.add(s2c);
 			
 			FirstLastRow.clear();
@@ -114,9 +122,9 @@ public class BWT {
 				break;
 			}
 		}
-		*/
 		
 		//LC在之前已经计算好了,在计算相似度时读取即可;
+		/*
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
 			InstructionSequence is = LCsequence.get(i);
@@ -140,6 +148,7 @@ public class BWT {
 				break;
 			}
 		}
+		*/
 		long endTime=System.currentTimeMillis();//记录结束时间 
 		
 		float readinTime=(float)(readTime - startTime)/1000;  
@@ -153,6 +162,18 @@ public class BWT {
 		//storeLCSequence();
 	}
 
+	/**
+	 * 将seed Sequence逆叙;
+	 * */
+	public static List<OpCode> ReverseNarration(List<OpCode> ops){
+		List<OpCode> list = new ArrayList<OpCode>();
+		for(int i = ops.size()-1;i >= 0;i--){
+			list.add(ops.get(i));
+		}
+		return list;
+	}
+	
+	
 	/**
 	 * BWT 算法实现;
 	 * startPosition 表示LastList中开始的位置;

@@ -7,8 +7,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class Rerank {
@@ -16,10 +18,72 @@ public class Rerank {
 		// splitWord("asdhjakshDksjahdkjwqhAdsfdsfdsfds1111111111111111111");
 		List<String> tokens1 = getTokenList("F:\\data\\jarFiles\\Top10000\\methodbody\\1.txt");
 		List<String> tokens2 = getTokenList("F:\\data\\jarFiles\\Top10000\\methodbody\\2.txt");
+		
+		
 		getContentSimilarity(tokens1, tokens2);
+
+		getWeightSimilarity(tokens1, tokens2);
+		
+		System.out.println("list2 " + isContains(tokens2, tokens1));
 	}
 
-	public static void getContentSimilarity(List<String> tokens1, List<String> tokens2) {
+	/**
+	 * Does tokens2 contain tokens1;
+	 * 判断token1中的所有元素是否包含于token2;
+	 * 在实际用的时候seed 序列是tokens1; freq 序列是tokens2;
+	 * */
+	public static boolean isContains(List<String> tokens1, List<String> tokens2){
+		return tokens2.containsAll(tokens1);
+	}
+	
+	/**
+	 * 计算带权重的content similarity;
+	 * 这里不确定应该用哪一个做分母 union.size() 或是seed 序列的去重之后的集合的size();
+	 * */
+	public static double getWeightSimilarity(List<String> tokens1, List<String> tokens2) {
+		int number = 0;
+		Map<String, Integer> map1 = List2Map(tokens1);
+		Map<String, Integer> map2 = List2Map(tokens2);
+		for (String s : map1.keySet()) {
+			if (map2.keySet().contains(s)) {
+				number += (map1.get(s) < map2.get(s) ? map1.get(s) : map2.get(s));
+			}
+		}
+
+		Set<String> union = new HashSet<String>();
+		union.addAll(tokens1);
+		union.addAll(tokens2);
+
+		System.out.println("Weight Set Similarity: " + 1.0 * number / union.size());
+		//System.out.println("Weight Set Similarity: " + union.size());
+		//System.out.println("Weight Set Similarity: " + number);
+
+		return 1.0 * number / union.size();
+	}
+
+	/**
+	 * 将token list 转化为map; 其中key为list中的tokens, value为其在list中出现的次数;
+	 * */
+	public static Map<String, Integer> List2Map(List<String> tokens) {
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		for (String s : tokens) {
+			if (map.containsKey(s)) {
+				map.replace(s, map.get(s) + 1);
+			} else {
+				map.put(s, 1);
+			}
+		}
+		//for (String s : map.keySet()) {
+		//	System.out.println(s + " " + map.get(s));
+		//}
+
+		return map;
+	}
+
+	/**
+	 * 计算连个代码之间的词的相似度;
+	 */
+	public static double getContentSimilarity(List<String> tokens1, List<String> tokens2) {
 		Set<String> set1 = new HashSet<String>(tokens1);
 		Set<String> set2 = new HashSet<String>(tokens2);
 
@@ -31,13 +95,18 @@ public class Rerank {
 		union.addAll(set1);
 		union.addAll(set2);
 
-		for(String s : intersection)
-			System.out.print(s + " ");
-		System.out.println();
-		
+		// for(String s : intersection)
+		// System.out.print(s + " ");
+		// System.out.println();
+
 		System.out.println("Set Similarity: " + 1.0 * intersection.size() / union.size());
+
+		return 1.0 * intersection.size() / union.size();
 	}
 
+	/**
+	 * 将源码转为词的集合;
+	 */
 	public static List<String> getTokenList(String path) {
 		List<String> list = new ArrayList<String>();
 		String code = readCodeFromFile(path).toString();
@@ -56,6 +125,9 @@ public class Rerank {
 		return list;
 	}
 
+	/**
+	 * 从文件中读取代码;
+	 */
 	public static StringBuffer readCodeFromFile(String path) {
 		StringBuffer code = new StringBuffer();
 		FileInputStream fis = null;
