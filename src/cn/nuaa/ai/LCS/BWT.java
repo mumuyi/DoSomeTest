@@ -1,5 +1,13 @@
 package cn.nuaa.ai.LCS;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -7,8 +15,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javassist.runtime.Inner;
 
 public class BWT {
 	private static List<List<OpCode>> FirstLastRow = new ArrayList<List<OpCode>>();
@@ -18,14 +24,18 @@ public class BWT {
 	{add(182);add(183);add(184);add(185);add(186);}};
 
 	private static int controlGroupNum = 1;
+
+	private static List<InstructionSequence> LCsequence = new ArrayList<InstructionSequence>();
+	
 	
 	public static void main(String[] args) {
 		
 		long startTime = System.currentTimeMillis();//记录开始时间
 		
 		TestLCS.getOpCodeFromFile();
-		//TestLCS.getInstructionsFromFile("F:\\data\\jarFiles\\Top10000\\instruction\\");
 		TestLCS.getInstructionsFromFile("F:\\data\\jarFiles\\Top10000\\instruction\\");
+		//从LC文件中读取LC序列;第一种计算方法不需要读取这个信息,第二种计算方法才需要;
+		getInstructionsFromLCFile("F:\\data\\jarFiles\\Top10000\\LCsequence\\");
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
 
 		long readTime=System.currentTimeMillis();//记录结束时间
@@ -79,8 +89,8 @@ public class BWT {
 		*/
 		
 		
-		
-		
+		//直接计算LC;
+		/*
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
 			InstructionSequence is = new InstructionSequence(TestLCS.getInstructions().get(i));
@@ -93,18 +103,31 @@ public class BWT {
 			s2c.setSimilarity((BWTSimilarity(firstRowMap, lastRowMap,TestLCS.getInstructions().get(controlGroupNum).getIns())+1)/TestLCS.getInstructions().get(controlGroupNum).getIns().size());
 			simiList.add(s2c);
 			
-			/*
-			System.out.println();
-			for(OpCode ops : FirstLastRow.get(0)){
-				System.out.println(ops.getCodeId() + " ");
+			FirstLastRow.clear();
+		}
+		Collections.sort(simiList);
+		int i = 0;
+		for (Similarity2ClassIndex s2c : simiList) {
+			System.out.println(s2c.getClassId() + "  " + s2c.getSimilarity() + "   " + TestLCS.getInsFiles()[s2c.getClassId()]);
+			i++;
+			if (i > 11) {
+				break;
 			}
-			System.out.println();
-			System.out.println();
-			for(OpCode ops : FirstLastRow.get(1)){
-				System.out.println(ops.getCodeId() + " ");
-			}
-			System.out.println();
-			*/
+		}
+		*/
+		
+		//LC在之前已经计算好了,在计算相似度时读取即可;
+		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
+		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
+			InstructionSequence is = LCsequence.get(i);
+			getFCFromLC(is);
+			
+			List<Integer> firstRowMap = mapRows(FirstLastRow.get(0));
+			List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
+			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
+			s2c.setClassId(i);
+			s2c.setSimilarity((BWTSimilarity(firstRowMap, lastRowMap,TestLCS.getInstructions().get(controlGroupNum).getIns())+1)/(TestLCS.getInstructions().get(controlGroupNum).getIns().size()));
+			simiList.add(s2c);
 			
 			FirstLastRow.clear();
 		}
@@ -117,7 +140,6 @@ public class BWT {
 				break;
 			}
 		}
-		
 		long endTime=System.currentTimeMillis();//记录结束时间 
 		
 		float readinTime=(float)(readTime - startTime)/1000;  
@@ -125,10 +147,12 @@ public class BWT {
 		
 		System.out.println("read in time："+readinTime);
 		System.out.println("process time："+excTime); 
+		
+		
+		
+		//storeLCSequence();
 	}
-	
-	
-	
+
 	/**
 	 * BWT 算法实现;
 	 * startPosition 表示LastList中开始的位置;
@@ -170,7 +194,6 @@ public class BWT {
 	 * BWT 字串匹配相似度计算算法实现;
 	 * */
 	public static double BWTSimilarity(List<Integer> firstRowMap,List<Integer> lastRowMap,List<OpCode> seedList){
-		//计算相似度的,现在没用;
 		double similarScore = 0.0;
 		double threshold = 0.0;
 		List<Integer> startPointList = null;
@@ -346,6 +369,7 @@ public class BWT {
 		// 添加$符号;
 		OpCode op = new OpCode();
 		op.setCodeId(-1);
+		op.setName("SELFDEFINEDNULLTOKEN");
 		List<OpCode> opList = is.getIns();
 		opList.add(0, op);
 		is.setIns(opList);
@@ -394,4 +418,180 @@ public class BWT {
 		//}
 	}
 
+	/**
+	 * 由Last Columns 得到 First Columns
+	 * */
+	public static void getFCFromLC(InstructionSequence is){
+		List<OpCode> firstRow = new ArrayList<OpCode>(is.getIns());
+		Collections.sort(is.getIns());
+		List<OpCode> lastRow = new ArrayList<OpCode>(is.getIns());
+		
+		FirstLastRow.add(lastRow);
+		FirstLastRow.add(firstRow);
+		
+		
+		//for(OpCode op : FirstLastRow.get(0)){
+		//	System.out.println(op.getName() + " " + op.getCodeId());
+		//}
+		//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!");
+		//for(OpCode op : FirstLastRow.get(1)){
+		//	System.out.println(op.getName() + " " + op.getCodeId());
+		//}
+		
+	}
+	
+	
+	/**
+	 * 将L-C Sequence 存入文件;
+	 * */
+	public static void storeLCSequence(){
+		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
+			InstructionSequence is = new InstructionSequence(TestLCS.getInstructions().get(i));
+			getFirstLastRow(is);
+			
+			StringBuffer buffer = new StringBuffer();
+			for(int j = 0;j < FirstLastRow.get(1).size();j++){
+				OpCode op = FirstLastRow.get(1).get(j);
+				buffer.append(op.getName());
+				if(op.getCodeId() == 182 || op.getCodeId() == 183 || op.getCodeId() == 184 || op.getCodeId() == 185 || op.getCodeId() == 186){
+					buffer.append(" " + op.getInvokedMethod());
+				}
+				if(j < FirstLastRow.get(1).size()-1){
+					buffer.append("\n");
+				}
+			}
+			
+			File file = TestLCS.getInsFiles()[i];
+			System.out.println(file.getName());
+			//System.out.println(buffer);
+			
+			try {
+				writeFileContent("F:\\data\\jarFiles\\Top10000\\LCsequence\\" + file.getName(),buffer);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			/*
+			for(OpCode op : FirstLastRow.get(0)){
+				System.out.println(op.getName() + " " + op.getCodeId());
+			}
+			System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!");
+			for(OpCode op : FirstLastRow.get(1)){
+				System.out.println(op.getName() + " " + op.getCodeId());
+			}
+			*/
+			
+			FirstLastRow.clear();
+		}
+	}
+	
+	
+	/**
+	 * 写入文件;
+	 * */
+	private static boolean writeFileContent(String filepath, StringBuffer buffer) throws IOException {
+		Boolean bool = false;
+		FileInputStream fis = null;
+		InputStreamReader isr = null;
+		BufferedReader br = null;
+		FileOutputStream fos = null;
+		PrintWriter pw = null;
+		try {
+			File file = new File(filepath);// 文件路径(包括文件名称)
+
+			fos = new FileOutputStream(file);
+			pw = new PrintWriter(fos);
+			pw.write(buffer.toString().toCharArray());
+			pw.flush();
+			bool = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			// 不要忘记关闭
+			if (pw != null) {
+				pw.close();
+			}
+			if (fos != null) {
+				fos.close();
+			}
+			if (br != null) {
+				br.close();
+			}
+			if (isr != null) {
+				isr.close();
+			}
+			if (fis != null) {
+				fis.close();
+			}
+		}
+		return bool;
+	}
+	
+	/**
+	 * 从LCSequence文件中获取数据;
+	 */
+	public static void getInstructionsFromLCFile(String filePath) {
+		File directory = new File(filePath);
+		File[] insFiles = directory.listFiles();
+		for (File file : insFiles) {
+			FileInputStream fis = null;
+			InputStreamReader isr = null;
+			BufferedReader br = null;
+			String filename = file.getName();
+			List<OpCode> list = new ArrayList<OpCode>();
+			InstructionSequence instrs = new InstructionSequence();
+			try {
+				String str = "";
+				fis = new FileInputStream(filePath + filename);
+				isr = new InputStreamReader(fis);
+				br = new BufferedReader(isr);
+				// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" +
+				// filename);
+				while ((str = br.readLine()) != null) {
+					// System.out.println(str);
+					// System.out.println(getOpCodeID(str));
+					if(str.equals("SELFDEFINEDNULLTOKEN")){
+						OpCode op = new OpCode();
+						op.setCodeId(-1);
+						op.setName("SELFDEFINEDNULLTOKEN");
+						list.add(op);
+					}
+					if (TestLCS.getOpCodeID(str) != -1) {
+						OpCode op = new OpCode(TestLCS.getOplist().get(TestLCS.getOpCodeID(str)));
+						list.add(op);
+					} else {
+						String[] strs = str.split(" ");
+						if (strs.length > 1) {
+							if (strs[0].equals("invokevirtual") || strs[0].equals("invokespecial")
+									|| strs[0].equals("invokestatic") || strs[0].equals("invokeinterface")
+									|| strs[0].equals("invokedynamic")) {
+								OpCode op = new OpCode(TestLCS.getOplist().get(TestLCS.getOpCodeID(strs[0])));
+								//System.out.println(strs[1]);
+								op.setInvokedMethod(strs[1]);
+								list.add(op);
+							}
+						}
+					}
+				}
+			} catch (FileNotFoundException e) {
+				System.out.println("Cann't find: " + filename);
+			} catch (IOException e) {
+				System.out.println("Cann't read: " + filename);
+			} finally {
+				try {
+					br.close();
+					isr.close();
+					fis.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			instrs.setIns(list);
+			instrs.setFileName(filename);
+			LCsequence.add(instrs);
+			//for (OpCode op : instructions.get(0)) {
+			//	System.out.println(op.getName() + " " + op.getInvokedMethod());
+			//}
+		}
+	}
 }

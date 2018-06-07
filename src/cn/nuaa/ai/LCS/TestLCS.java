@@ -371,7 +371,7 @@ public class TestLCS {
 		//	System.out.println(op.getName() + " " + op.getInvokedMethod());
 		//}
 	}
-
+	
 	/**
 	 * 计算集合间的相似度;
 	 */

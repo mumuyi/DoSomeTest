@@ -1,6 +1,6 @@
 package cn.nuaa.ai.LCS;
 
-public class OpCode {
+public class OpCode implements Comparable<OpCode>{
 	private int codeId;
 	private String code;
 	private String name;
@@ -65,6 +65,16 @@ public class OpCode {
 
 	public void setInvokedMethod(String invokedMethod) {
 		this.invokedMethod = invokedMethod;
+	}
+
+	@Override
+	public int compareTo(OpCode op) {
+		if(this.getCodeId() < op.getCodeId())
+			return -1;
+		else if(this.getCodeId() > op.getCodeId())
+			return 1;
+		else
+			return 0;
 	}
 
 }
