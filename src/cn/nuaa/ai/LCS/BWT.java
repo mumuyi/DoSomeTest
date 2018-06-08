@@ -23,7 +23,7 @@ public class BWT {
 		private static final long serialVersionUID = -8723339838495980395L;
 	{add(182);add(183);add(184);add(185);add(186);}};
 
-	private static int controlGroupNum = 0;
+	private static int controlGroupNum = 2;
 
 	private static List<InstructionSequence> LCsequence = new ArrayList<InstructionSequence>();
 	
@@ -40,56 +40,151 @@ public class BWT {
 
 		long readTime=System.currentTimeMillis();//记录结束时间
 		
-		//InstructionSequence is = new InstructionSequence(TestLCS.getInstructions().get(0));
-		//getFirstLastRow(is);
+		//BWTSearch();
+		//BWTSearch2();
+		//BWTSearchWithReverseNarration();
+		//用来为第二种计算方法预先计算LCsequence的;
+		//storeLCSequence();
+		//聚类;
+		ISClustering();
+	
+		//removeLessThan20();
 		
-		//List<Integer> firstRowMap = mapRows(FirstLastRow.get(0));
-		//List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
+		long endTime=System.currentTimeMillis();//记录结束时间 
+		float readinTime=(float)(readTime - startTime)/1000;  
+		float excTime=(float)(endTime - readTime)/1000;  
+		System.out.println("read in time："+readinTime);
+		System.out.println("process time："+excTime); 
 		
-		
-		//BurrowsWheelerTransform(firstRowMap, lastRowMap, 0, FirstLastRow.get(0).size()-1);
-		//for(OpCode op : TestLCS.getInstructions().get(0).getIns()){
-		//	System.out.print(op.getCodeId() + " ");
-		//}
-		//System.out.println();
-		
-		
-		/*
-		System.out.println();
-		for(int i : firstRowMap){
-			System.out.print(i + " ");
-		}
-		
-		System.out.println();
-		for (OpCode ops : FirstLastRow.get(0)) {
-			System.out.print(ops.getCodeId() + " ");
-		}
-		System.out.println();
-		for (OpCode ops : FirstLastRow.get(1)) {
-			System.out.print(ops.getCodeId() + " ");
-		}
-		*/
-		/*
-		System.out.println();
-		for (OpCode ops : TestLCS.getInstructions().get(0).getIns()) {
-			System.out.println(ops.getCodeId() + " " + ops.getName());
-		}
-		*/
-		/*
-		for(int i = 0; i < 11;i++){
-			for(int j = 0;j < 11;j++){
-				for(OpCode op : TestLCS.getOplist()){
-					if(op.getLevle1() == i && op.getLevle2() == j){
-						System.out.print(op.getName() + " ");
-					}
-				}
-				System.out.println();
+	}
+
+	/**
+	 * 删除Instruction Sequence 长度小于20的;
+	 * */
+	public static void removeLessThan20(){
+		List<String> list = new ArrayList<String>();
+		int counter = 0;
+		for(int i =0; i < TestLCS.getInstructions().size(); i++){
+			if(TestLCS.getInstructions().get(i).getIns().size() < 20){
+				list.add(TestLCS.getInstructions().get(i).getFileName());
+				counter ++;
 			}
 		}
+		/*
+		for(String name : list){
+			File file = new File("F:\\data\\jarFiles\\Top10000\\instruction\\" + name);
+			file.delete();
+			File file1 = new File("F:\\data\\jarFiles\\Top10000\\methodbody\\" + name);
+			file1.delete();
+		}
 		*/
+		System.out.println(counter + " " + list.size());
+	}
+	
+	
+	/**
+	 * 对代码进行聚类;
+	 * */
+	public static void ISClustering(){
+		List<List<String>> clusteringResultList = new ArrayList<List<String>>();
+		Map<String,Boolean> map = new HashMap<String,Boolean>();
+			
+		for(int i =0; i < TestLCS.getInstructions().size(); i++){
+			if(TestLCS.getInstructions().get(i).getIns().size() > 20)
+				map.put(TestLCS.getInstructions().get(i).getFileName(), false);
+			else
+				map.put(TestLCS.getInstructions().get(i).getFileName(), true);
+		}
 		
+		System.out.println("!!!!!!!!!!!!!!! " + "begin to clustering" + " !!!!!!!!!!!!!!!!!!!!!!");
 		
-		//直接计算LC;
+		for(int i =0; i < TestLCS.getInstructions().size(); i++){
+			InstructionSequence controlIns = new InstructionSequence(TestLCS.getInstructions().get(i));
+			if(map.get(controlIns.getFileName())){
+				continue;
+			}
+			//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + i);
+			List<String> clusteringResult = new ArrayList<String>();
+			clusteringResult.add(controlIns.getFileName());
+			map.replace(controlIns.getFileName(), true);
+			for (int j = 0; j < TestLCS.getInstructions().size(); j++) {
+				double similarity = 0;
+				InstructionSequence is = new InstructionSequence(TestLCS.getInstructions().get(j));
+				if(i == j || map.get(is.getFileName())){
+					continue;
+				}
+				
+				//正序查找;
+				getFirstLastRow(is);
+				List<Integer> firstRowMap = mapRows(FirstLastRow.get(0));
+				List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
+				double s1 = (BWTSimilarity(firstRowMap, lastRowMap,controlIns.getIns())+1)/controlIns.getIns().size();
+				firstRowMap.clear();
+				lastRowMap.clear();
+				FirstLastRow.clear();
+				
+				//逆序查找;
+				InstructionSequence is1 = new InstructionSequence();
+				is1.setFileName(is.getFileName());
+				is1.setIns(ReverseNarration(is.getIns()));
+				getFirstLastRow(is1);
+				firstRowMap = mapRows(FirstLastRow.get(0));
+				lastRowMap = mapRows(FirstLastRow.get(1));
+				double s2 = (BWTSimilarity(firstRowMap, lastRowMap,ReverseNarration(controlIns.getIns()))+1)/controlIns.getIns().size();
+				FirstLastRow.clear();
+				
+				//选择相似度大的;
+				similarity = (s1 > s2 ? s1 : s2);
+				if(similarity >= 0.80){
+					clusteringResult.add(is.getFileName());
+					map.replace(is.getFileName(), true);
+				}
+			}
+			clusteringResultList.add(clusteringResult);
+		}
+		System.out.println(clusteringResultList.size());
+		//for(int i = 0; i < clusteringResultList.size();i++){
+		//	System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!    " + i + "   " + clusteringResultList.get(i).size());
+		//	for(String s : clusteringResultList.get(i)){
+				//System.out.println(s);
+		//	}
+		//}
+		storeClusteringResult(clusteringResultList);
+	}
+	
+	/**
+	 * 存储聚类结果;
+	 * */
+	public static void storeClusteringResult(List<List<String>> clusteringResultList){
+		for(int i = 0; i < clusteringResultList.size();i++){
+			//File file = new File("F:\\data\\jarFiles\\Top10000\\ClusteringResult\\clusteringResult" + i);
+			//if(!file.exists()){  
+			//    file.mkdirs();  
+			//}
+			
+			StringBuffer str = new StringBuffer();
+			for(int j = 0;j < clusteringResultList.get(i).size();j++){
+				str.append(clusteringResultList.get(i).get(j));
+				if(j < clusteringResultList.get(i).size() - 1){
+					str.append("\n");
+				}
+			}
+			
+			try {
+				writeFileContent("F:\\data\\jarFiles\\Top10000\\ClusteringResult75\\clusteringResult" + i + ".txt",str);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	
+	
+	
+	/**
+	 * 在计算的过程中计算LC;
+	 * */
+	public static void BWTSearch(){
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
 			InstructionSequence is = new InstructionSequence(TestLCS.getInstructions().get(i));
@@ -122,9 +217,58 @@ public class BWT {
 				break;
 			}
 		}
-		
-		//LC在之前已经计算好了,在计算相似度时读取即可;
-		/*
+	}
+	
+	/**
+	 * 还是第一种计算方法,但是考虑了逆序的问题;
+	 * */
+	public static void BWTSearchWithReverseNarration(){
+		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
+		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
+			InstructionSequence is = new InstructionSequence(TestLCS.getInstructions().get(i));
+			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
+			//正序查找;
+			getFirstLastRow(is);
+			List<Integer> firstRowMap = mapRows(FirstLastRow.get(0));
+			List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
+			double s1 = (BWTSimilarity(firstRowMap, lastRowMap,TestLCS.getInstructions().get(controlGroupNum).getIns())+1)/TestLCS.getInstructions().get(controlGroupNum).getIns().size();
+			firstRowMap.clear();
+			lastRowMap.clear();
+			FirstLastRow.clear();
+			
+			//逆序查找;
+			InstructionSequence is1 = new InstructionSequence();
+			is1.setFileName(is.getFileName());
+			is1.setIns(ReverseNarration(is.getIns()));
+			getFirstLastRow(is1);
+			firstRowMap = mapRows(FirstLastRow.get(0));
+			lastRowMap = mapRows(FirstLastRow.get(1));
+			double s2 = (BWTSimilarity(firstRowMap, lastRowMap,ReverseNarration(TestLCS.getInstructions().get(controlGroupNum).getIns()))+1)/TestLCS.getInstructions().get(controlGroupNum).getIns().size();
+			
+			//选择相似度大的;
+			s2c.setClassId(i);
+			s2c.setSimilarity((s1 > s2 ? s1 : s2));
+			simiList.add(s2c);
+			
+			FirstLastRow.clear();
+		}
+		Collections.sort(simiList);
+		int i = 0;
+		for (Similarity2ClassIndex s2c : simiList) {
+			System.out.println(s2c.getClassId() + "  " + s2c.getSimilarity() + "   " + TestLCS.getInsFiles()[s2c.getClassId()]);
+			i++;
+			if (i > 11) {
+				break;
+			}
+		}
+	}
+	
+	
+	
+	/**
+	 * LC在之前已经计算好了,在计算相似度时读取即可;
+	 * */
+	public static void BWTSearch2(){
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
 			InstructionSequence is = LCsequence.get(i);
@@ -148,20 +292,10 @@ public class BWT {
 				break;
 			}
 		}
-		*/
-		long endTime=System.currentTimeMillis();//记录结束时间 
-		
-		float readinTime=(float)(readTime - startTime)/1000;  
-		float excTime=(float)(endTime - readTime)/1000;  
-		
-		System.out.println("read in time："+readinTime);
-		System.out.println("process time："+excTime); 
-		
-		
-		
-		//storeLCSequence();
 	}
-
+	
+	
+	
 	/**
 	 * 将seed Sequence逆叙;
 	 * */
@@ -186,7 +320,7 @@ public class BWT {
 		int preNum = 0;
 		List<OpCode> list = new ArrayList<OpCode>();
 		
-		for(int i = 0;(i < N) && (FirstLastRow.get(1).get(Lindex).getCodeId() != -1);i++){
+		for(int i = 0;(i < N) && (FirstLastRow.get(1).size() > Lindex) && (FirstLastRow.get(1).get(Lindex).getCodeId() != -1);i++){
 			list.add(FirstLastRow.get(1).get(Lindex));
 			//System.out.println("List add: " + FirstLastRow.get(1).get(Lindex).getCodeId());
 			preId  = FirstLastRow.get(1).get(Lindex).getCodeId();
@@ -219,12 +353,18 @@ public class BWT {
 		double threshold = 0.0;
 		List<Integer> startPointList = null;
 		for(int i = 0;i < 3;i++){
-			startPointList = getStartPoint(seedList.get(seedList.size()-1));
-			if(startPointList != null){
+			if(seedList.size()-1-i < 0){
+				break;
+			}
+			startPointList = getStartPoint(seedList.get(seedList.size()-1-i));
+			if(startPointList != null && !startPointList.isEmpty()){
 				break;
 			}
 		}
-		if(startPointList == null){
+		if(startPointList == null || startPointList.isEmpty()){
+			return 0.0;
+		}
+		if(startPointList.contains(-1)){
 			return 0.0;
 		}
 		
@@ -274,8 +414,14 @@ public class BWT {
 					threshold += 1;
 					int temp = getFirstIndex(firstRowMap,freqOp.getCodeId(),lastRowMap.get(startPoint));
 					startPoint = getFirstIndex(firstRowMap,freqOp1.getCodeId(),lastRowMap.get(temp));
+					if(startPoint == -1){
+						break;
+					}
 				}else{
 					startPoint = getFirstIndex(firstRowMap,freqOp.getCodeId(),lastRowMap.get(startPoint));
+					if(startPoint == -1){
+						break;
+					}
 				}
 			}
 			//System.out.println(tempSimilarity);
