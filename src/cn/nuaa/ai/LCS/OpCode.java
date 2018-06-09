@@ -16,7 +16,10 @@ public class OpCode implements Comparable<OpCode>{
 		this.name = op.getName();
 		this.levle1 = op.getLevle1();
 		this.levle2 = op.getLevle2();
-		this.invokedMethod = op.getInvokedMethod();
+		if(op.getInvokedMethod() != null)
+			this.invokedMethod = new String(op.getInvokedMethod());
+		else
+			this.invokedMethod = null;
 	}
 	
 	public int getCodeId() {

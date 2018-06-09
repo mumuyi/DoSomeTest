@@ -23,8 +23,6 @@ public class BWT {
 		private static final long serialVersionUID = -8723339838495980395L;
 	{add(182);add(183);add(184);add(185);add(186);}};
 
-	private static int controlGroupNum = 2;
-
 	private static List<InstructionSequence> LCsequence = new ArrayList<InstructionSequence>();
 	
 	
@@ -35,19 +33,33 @@ public class BWT {
 		TestLCS.getOpCodeFromFile();
 		TestLCS.getInstructionsFromFile("F:\\data\\jarFiles\\Top10000\\instruction\\");
 		//从LC文件中读取LC序列;第一种计算方法不需要读取这个信息,第二种计算方法才需要;
-		//getInstructionsFromLCFile("F:\\data\\jarFiles\\Top10000\\LCsequence\\");
+		getInstructionsFromLCFile("F:\\data\\jarFiles\\Top10000\\LCsequence\\");
+		//读取聚类信息;
+		Map<String, List<String>> clusteringMap = loadClusteringResult("F:\\data\\jarFiles\\Top10000\\ClusteringResult80\\");
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
 
 		long readTime=System.currentTimeMillis();//记录结束时间
 		
-		//BWTSearch();
-		//BWTSearch2();
-		//BWTSearchWithReverseNarration();
+		//第一种查找方法,在计算的同时去计算LC Sequence;
+		//BWTSearch(TestLCS.getInstructions().get(121));
+		//第二种查找方法,预先计算LC Sequence;	第二种查找方式暂时没有实现逆序,因为逆序的数据也需要写入,这个暂时还没做,但是应该较为容易实现;	
+		//BWTSearch2(TestLCS.getInstructions().get(121));
+		//第一种方法的变种;计算正序和逆序;
+		//BWTSearchWithReverseNarration(TestLCS.getInstructions().get(121));
+		
+		
 		//用来为第二种计算方法预先计算LCsequence的;
 		//storeLCSequence();
+		
 		//聚类;
-		ISClustering();
-	
+		//ISClustering();
+		
+
+		//在聚类的基础上进行查找;
+		BWTSearchWithClustering(TestLCS.getInstructions().get(121), clusteringMap);
+		
+		
+		//去掉数据库中Instruction Sequence长度小于20的;
 		//removeLessThan20();
 		
 		long endTime=System.currentTimeMillis();//记录结束时间 
@@ -58,6 +70,140 @@ public class BWT {
 		
 	}
 
+	/**
+	 * 使用了聚类结果进行查询;
+	 * */
+	public static void BWTSearchWithClustering(InstructionSequence seed, Map<String, List<String>> clusteringMap){
+		List<Similarity2ClassName> coarseGrainedResultsList = new ArrayList<Similarity2ClassName>();
+		for(String s : clusteringMap.keySet()){
+			InstructionSequence is = getInstructionFromFileName(clusteringMap.get(s).get(0));
+			
+			Similarity2ClassName s2c = new Similarity2ClassName();
+			s2c.setClassName(s);
+			s2c.setSimilarity(getSimilarity(seed,is));
+			
+			coarseGrainedResultsList.add(s2c);
+		}
+		Collections.sort(coarseGrainedResultsList);
+		
+		//for(Similarity2ClassName s2c : coarseGrainedResultsList){
+		//	System.out.println(s2c.getClassName() + "  " + s2c.getSimilarity());
+		//}
+		//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+		
+		List<Similarity2ClassName> fineGrainedResultsList = new ArrayList<Similarity2ClassName>();
+		for (int i = 0;i < coarseGrainedResultsList.size() && i < 500;i++) {
+			Similarity2ClassName s2c = coarseGrainedResultsList.get(i);
+			for(String s : clusteringMap.get(s2c.getClassName())){			
+				InstructionSequence is = getInstructionFromFileName(s);
+
+				Similarity2ClassName temps2c = new Similarity2ClassName();
+				temps2c.setClassName(s);
+				temps2c.setSimilarity(getSimilarity(seed,is));
+				
+				fineGrainedResultsList.add(temps2c);
+			}
+		}
+		Collections.sort(fineGrainedResultsList);
+		int i = 0;
+		for(Similarity2ClassName s2c : fineGrainedResultsList){
+			System.out.println(s2c.getClassName() + "  " + s2c.getSimilarity());
+			if(i > 10){
+				break;
+			}
+			i++;
+		}
+	}
+	
+	public static double getSimilarity(InstructionSequence seed, InstructionSequence freq){
+		//System.out.println(seed.getFileName());
+		//正序查找;
+		getFirstLastRow(freq);
+		List<Integer> firstRowMap = mapRows(FirstLastRow.get(0));
+		List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
+		double s1 = (BWTSimilarity(firstRowMap, lastRowMap,seed.getIns())+1)/seed.getIns().size();
+		firstRowMap.clear();
+		lastRowMap.clear();
+		FirstLastRow.clear();
+		
+		//逆序查找;
+		InstructionSequence is1 = new InstructionSequence();
+		is1.setFileName(freq.getFileName());
+		is1.setIns(ReverseNarration(freq.getIns()));
+		getFirstLastRow(is1);
+		firstRowMap = mapRows(FirstLastRow.get(0));
+		lastRowMap = mapRows(FirstLastRow.get(1));
+		double s2 = (BWTSimilarity(firstRowMap, lastRowMap,ReverseNarration(seed.getIns()))+1)/seed.getIns().size();
+		FirstLastRow.clear();
+		//System.out.println(s1 + "  " + s2);
+		
+		return (s1 > s2 ? s1 : s2);
+	}
+	
+	/**
+	 * 从文件中读取聚类结果;
+	 * */
+	public static Map<String, List<String>> loadClusteringResult(String filePath){
+		Map<String, List<String>> clusteringMap = new HashMap<String, List<String>>();
+		File directory = new File(filePath);
+		File[] cluFiles = directory.listFiles();
+		for(File file : cluFiles){
+			FileInputStream fis = null;
+			InputStreamReader isr = null;
+			BufferedReader br = null;
+			List<String> list = new ArrayList<String>();
+			try {
+				String str = "";
+				fis = new FileInputStream(filePath + file.getName());
+				isr = new InputStreamReader(fis);
+				br = new BufferedReader(isr);
+				while ((str = br.readLine()) != null) {
+					list.add(str);
+				}
+			} catch (FileNotFoundException e) {
+				System.out.println("Cann't find: " + file.getName());
+			} catch (IOException e) {
+				System.out.println("Cann't read: " + file.getName());
+			} finally {
+				try {
+					br.close();
+					isr.close();
+					fis.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			clusteringMap.put(file.getName(), list);
+		}
+		
+		//for(String s : clusteringMap.keySet()){
+		//	System.out.println(s);
+		//}
+		//System.out.println(clusteringMap.size());		
+		//for(String s : clusteringMap.get("clusteringResult0.txt")){
+		//	System.out.println(s);
+		//}
+		
+		return clusteringMap;
+	}
+	
+	/**
+	 * 根据方法的完全限定名称得到其对应的指令序列;
+	 * 从TestLCS.getInstructions() 中获取; 不是根据文件名去从文件中重新读取;
+	 * */
+	public static InstructionSequence getInstructionFromFileName(String fileName){
+		for(InstructionSequence ins : TestLCS.getInstructions()){
+			//System.out.println("1111111111111111111111111111 " + fileName);
+			//System.out.println("2222222222222222222222222222 " +ins.getFileName());
+			if(ins.getFileName().equals(fileName)){
+				InstructionSequence is = new InstructionSequence(ins);
+				return is;
+			}
+		}
+		return null;
+	}
+	
+	
 	/**
 	 * 删除Instruction Sequence 长度小于20的;
 	 * */
@@ -184,26 +330,13 @@ public class BWT {
 	/**
 	 * 在计算的过程中计算LC;
 	 * */
-	public static void BWTSearch(){
+	public static void BWTSearch(InstructionSequence seed){
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
 			InstructionSequence is = new InstructionSequence(TestLCS.getInstructions().get(i));
-			//正序查找;
-			//getFirstLastRow(is);
-			//逆序查找;
-			InstructionSequence is1 = new InstructionSequence();
-			is1.setFileName(is.getFileName());
-			is1.setIns(ReverseNarration(is.getIns()));
-			getFirstLastRow(is1);
-			
-			List<Integer> firstRowMap = mapRows(FirstLastRow.get(0));
-			List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
 			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
 			s2c.setClassId(i);
-			//正序查找;
-			//s2c.setSimilarity((BWTSimilarity(firstRowMap, lastRowMap,TestLCS.getInstructions().get(controlGroupNum).getIns())+1)/TestLCS.getInstructions().get(controlGroupNum).getIns().size());
-			//逆序查找;
-			s2c.setSimilarity((BWTSimilarity(firstRowMap, lastRowMap,ReverseNarration(TestLCS.getInstructions().get(controlGroupNum).getIns()))+1)/TestLCS.getInstructions().get(controlGroupNum).getIns().size());
+			s2c.setSimilarity(getSimilarity(seed,is));
 			simiList.add(s2c);
 			
 			FirstLastRow.clear();
@@ -222,7 +355,7 @@ public class BWT {
 	/**
 	 * 还是第一种计算方法,但是考虑了逆序的问题;
 	 * */
-	public static void BWTSearchWithReverseNarration(){
+	public static void BWTSearchWithReverseNarration(InstructionSequence seed){
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
 			InstructionSequence is = new InstructionSequence(TestLCS.getInstructions().get(i));
@@ -231,7 +364,7 @@ public class BWT {
 			getFirstLastRow(is);
 			List<Integer> firstRowMap = mapRows(FirstLastRow.get(0));
 			List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
-			double s1 = (BWTSimilarity(firstRowMap, lastRowMap,TestLCS.getInstructions().get(controlGroupNum).getIns())+1)/TestLCS.getInstructions().get(controlGroupNum).getIns().size();
+			double s1 = (BWTSimilarity(firstRowMap, lastRowMap,seed.getIns())+1)/seed.getIns().size();
 			firstRowMap.clear();
 			lastRowMap.clear();
 			FirstLastRow.clear();
@@ -243,7 +376,7 @@ public class BWT {
 			getFirstLastRow(is1);
 			firstRowMap = mapRows(FirstLastRow.get(0));
 			lastRowMap = mapRows(FirstLastRow.get(1));
-			double s2 = (BWTSimilarity(firstRowMap, lastRowMap,ReverseNarration(TestLCS.getInstructions().get(controlGroupNum).getIns()))+1)/TestLCS.getInstructions().get(controlGroupNum).getIns().size();
+			double s2 = (BWTSimilarity(firstRowMap, lastRowMap,ReverseNarration(seed.getIns()))+1)/seed.getIns().size();
 			
 			//选择相似度大的;
 			s2c.setClassId(i);
@@ -268,17 +401,17 @@ public class BWT {
 	/**
 	 * LC在之前已经计算好了,在计算相似度时读取即可;
 	 * */
-	public static void BWTSearch2(){
+	public static void BWTSearch2(InstructionSequence seed){
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
 			InstructionSequence is = LCsequence.get(i);
 			getFCFromLC(is);
-			
+				
 			List<Integer> firstRowMap = mapRows(FirstLastRow.get(0));
 			List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
 			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
 			s2c.setClassId(i);
-			s2c.setSimilarity((BWTSimilarity(firstRowMap, lastRowMap,TestLCS.getInstructions().get(controlGroupNum).getIns())+1)/(TestLCS.getInstructions().get(controlGroupNum).getIns().size()));
+			s2c.setSimilarity((BWTSimilarity(firstRowMap, lastRowMap,seed.getIns())+1)/(seed.getIns().size()));
 			simiList.add(s2c);
 			
 			FirstLastRow.clear();
@@ -589,12 +722,14 @@ public class BWT {
 	 * 由Last Columns 得到 First Columns
 	 * */
 	public static void getFCFromLC(InstructionSequence is){
-		List<OpCode> firstRow = new ArrayList<OpCode>(is.getIns());
-		Collections.sort(is.getIns());
-		List<OpCode> lastRow = new ArrayList<OpCode>(is.getIns());
+		InstructionSequence ins = new InstructionSequence(is);
+		List<OpCode> lastRow = new ArrayList<OpCode>(ins.getIns());
+		Collections.sort(ins.getIns());
+		List<OpCode> firstRow = new ArrayList<OpCode>(ins.getIns());
 		
-		FirstLastRow.add(lastRow);
 		FirstLastRow.add(firstRow);
+		FirstLastRow.add(lastRow);
+		
 		
 		
 		//for(OpCode op : FirstLastRow.get(0)){
@@ -717,7 +852,7 @@ public class BWT {
 				while ((str = br.readLine()) != null) {
 					// System.out.println(str);
 					// System.out.println(getOpCodeID(str));
-					if(str.equals("SELFDEFINEDNULLTOKEN")){
+					if(str.contains("SELFDEFINEDNULLTOKEN")){
 						OpCode op = new OpCode();
 						op.setCodeId(-1);
 						op.setName("SELFDEFINEDNULLTOKEN");
