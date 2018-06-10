@@ -359,6 +359,7 @@ public class TestLCS {
 					e.printStackTrace();
 				}
 			}
+			instrs.setId(i);
 			instrs.setIns(list);
 			instrs.setFileName(filename);
 			instructions.add(instrs);

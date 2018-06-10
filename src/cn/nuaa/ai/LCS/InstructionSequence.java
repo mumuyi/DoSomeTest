@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InstructionSequence implements Comparable<InstructionSequence>{
+	private int id;
 	private List<OpCode> ins;
 	private String FileName;
 
 	public InstructionSequence(){}
 	
 	public InstructionSequence(InstructionSequence is){
+		this.id = is.id;
 		this.setFileName(is.getFileName());
 		List<OpCode> list = new ArrayList<OpCode>();
 		if(is.getIns() != null){
@@ -20,6 +22,14 @@ public class InstructionSequence implements Comparable<InstructionSequence>{
 		this.setIns(list);
 	}	
 	
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
 	public List<OpCode> getIns() {
 		return ins;
 	}
