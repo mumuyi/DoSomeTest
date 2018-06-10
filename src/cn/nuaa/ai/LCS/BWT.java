@@ -24,6 +24,7 @@ public class BWT {
 	{add(182);add(183);add(184);add(185);add(186);}};
 
 	private static List<InstructionSequence> LCsequence = new ArrayList<InstructionSequence>();
+	private static List<InstructionSequence> ReverseNarrationLCSequence = new ArrayList<InstructionSequence>();
 	
 	
 	public static void main(String[] args) {
@@ -31,9 +32,10 @@ public class BWT {
 		long startTime = System.currentTimeMillis();//记录开始时间
 		
 		TestLCS.getOpCodeFromFile();
-		TestLCS.getInstructionsFromFile("F:\\data\\jarFiles\\Top10000\\instruction\\");
+		TestLCS.getInstructionsFromFile("F:\\data\\jarFiles\\Top100000\\instruction\\");
 		//从LC文件中读取LC序列;第一种计算方法不需要读取这个信息,第二种计算方法才需要;
-		getInstructionsFromLCFile("F:\\data\\jarFiles\\Top10000\\LCsequence\\");
+		getInstructionsFromLCFile("F:\\data\\jarFiles\\Top10000\\LCsequence\\",0);
+		getInstructionsFromLCFile("F:\\data\\jarFiles\\Top10000\\ReverseNarrationLCSequence\\",1);
 		//读取聚类信息;
 		Map<String, List<String>> clusteringMap = loadClusteringResult("F:\\data\\jarFiles\\Top10000\\ClusteringResult80\\");
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
@@ -42,25 +44,20 @@ public class BWT {
 		
 		//第一种查找方法,在计算的同时去计算LC Sequence;
 		//BWTSearch(TestLCS.getInstructions().get(121));
-		//第二种查找方法,预先计算LC Sequence;	第二种查找方式暂时没有实现逆序,因为逆序的数据也需要写入,这个暂时还没做,但是应该较为容易实现;	
+		//第二种查找方法,预先计算LC Sequence;		
 		//BWTSearch2(TestLCS.getInstructions().get(121));
-		//第一种方法的变种;计算正序和逆序;
-		//BWTSearchWithReverseNarration(TestLCS.getInstructions().get(121));
-		
+		//在聚类的基础上进行查找;
+		//BWTSearchWithClustering(TestLCS.getInstructions().get(121), clusteringMap);
 		
 		//用来为第二种计算方法预先计算LCsequence的;
 		//storeLCSequence();
+		//storeReverseNarrationLCSequence();
 		
 		//聚类;
 		//ISClustering();
 		
-
-		//在聚类的基础上进行查找;
-		BWTSearchWithClustering(TestLCS.getInstructions().get(121), clusteringMap);
-		
-		
 		//去掉数据库中Instruction Sequence长度小于20的;
-		//removeLessThan20();
+		removeLessThan20();
 		
 		long endTime=System.currentTimeMillis();//记录结束时间 
 		float readinTime=(float)(readTime - startTime)/1000;  
@@ -74,32 +71,41 @@ public class BWT {
 	 * 使用了聚类结果进行查询;
 	 * */
 	public static void BWTSearchWithClustering(InstructionSequence seed, Map<String, List<String>> clusteringMap){
-		List<Similarity2ClassName> coarseGrainedResultsList = new ArrayList<Similarity2ClassName>();
+		List<Similarity2ClassName> clusteringGroupResultsList = new ArrayList<Similarity2ClassName>();
+		List<Similarity2ClassName> fineGrainedResultsList = new ArrayList<Similarity2ClassName>();
+		Map<String,Double> coarseGrainedResultsList = new HashMap<String,Double>();
 		for(String s : clusteringMap.keySet()){
 			InstructionSequence is = getInstructionFromFileName(clusteringMap.get(s).get(0));
 			
 			Similarity2ClassName s2c = new Similarity2ClassName();
 			s2c.setClassName(s);
-			s2c.setSimilarity(getSimilarity(seed,is));
+			s2c.setSimilarity(getSimilarity2(seed,is));
+			//在clusteringGroupResultList 中加入相似度计算结果;以此判断相似度较高的类别; 
+			clusteringGroupResultsList.add(s2c);
+			//在coarseGrainedResultsList 中加入相似度计算结果;避免某些结果的重复计算;
+			coarseGrainedResultsList.put(clusteringMap.get(s).get(0), s2c.getSimilarity());
 			
-			coarseGrainedResultsList.add(s2c);
 		}
-		Collections.sort(coarseGrainedResultsList);
+		Collections.sort(clusteringGroupResultsList);
 		
 		//for(Similarity2ClassName s2c : coarseGrainedResultsList){
 		//	System.out.println(s2c.getClassName() + "  " + s2c.getSimilarity());
 		//}
 		//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		
-		List<Similarity2ClassName> fineGrainedResultsList = new ArrayList<Similarity2ClassName>();
-		for (int i = 0;i < coarseGrainedResultsList.size() && i < 500;i++) {
-			Similarity2ClassName s2c = coarseGrainedResultsList.get(i);
+		for (int i = 0;i < clusteringGroupResultsList.size() && i < 500;i++) {
+			Similarity2ClassName s2c = clusteringGroupResultsList.get(i);
 			for(String s : clusteringMap.get(s2c.getClassName())){			
 				InstructionSequence is = getInstructionFromFileName(s);
 
 				Similarity2ClassName temps2c = new Similarity2ClassName();
 				temps2c.setClassName(s);
-				temps2c.setSimilarity(getSimilarity(seed,is));
+				//如果在第一步选择Clustering Group时就已经算过了,就不再重新算了;
+				if(coarseGrainedResultsList.keySet().contains(is.getFileName())){
+					temps2c.setSimilarity(coarseGrainedResultsList.get(is.getFileName()));
+				}else{
+					temps2c.setSimilarity(getSimilarity2(seed,is));
+				}
 				
 				fineGrainedResultsList.add(temps2c);
 			}
@@ -115,6 +121,10 @@ public class BWT {
 		}
 	}
 	
+	/**
+	 * 通过第一种方法来计算两个InstructionSequence 之间的相似度;
+	 * 即在计算的过程中来计算LC Sequence;
+	 * */
 	public static double getSimilarity(InstructionSequence seed, InstructionSequence freq){
 		//System.out.println(seed.getFileName());
 		//正序查找;
@@ -193,8 +203,6 @@ public class BWT {
 	 * */
 	public static InstructionSequence getInstructionFromFileName(String fileName){
 		for(InstructionSequence ins : TestLCS.getInstructions()){
-			//System.out.println("1111111111111111111111111111 " + fileName);
-			//System.out.println("2222222222222222222222222222 " +ins.getFileName());
 			if(ins.getFileName().equals(fileName)){
 				InstructionSequence is = new InstructionSequence(ins);
 				return is;
@@ -216,14 +224,15 @@ public class BWT {
 				counter ++;
 			}
 		}
-		/*
+		
 		for(String name : list){
-			File file = new File("F:\\data\\jarFiles\\Top10000\\instruction\\" + name);
+			File file = new File("F:\\data\\jarFiles\\Top100000\\instruction\\" + name);
 			file.delete();
-			File file1 = new File("F:\\data\\jarFiles\\Top10000\\methodbody\\" + name);
+			File file1 = new File("F:\\data\\jarFiles\\Top100000\\methodbody\\" + name);
 			file1.delete();
 		}
-		*/
+		
+		System.out.println(TestLCS.getInstructions().size());
 		System.out.println(counter + " " + list.size());
 	}
 	
@@ -353,49 +362,52 @@ public class BWT {
 	}
 	
 	/**
-	 * 还是第一种计算方法,但是考虑了逆序的问题;
+	 * 得到InstructionSequence 对应的LC Sequence;
 	 * */
-	public static void BWTSearchWithReverseNarration(InstructionSequence seed){
-		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
-		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
-			InstructionSequence is = new InstructionSequence(TestLCS.getInstructions().get(i));
-			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
-			//正序查找;
-			getFirstLastRow(is);
-			List<Integer> firstRowMap = mapRows(FirstLastRow.get(0));
-			List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
-			double s1 = (BWTSimilarity(firstRowMap, lastRowMap,seed.getIns())+1)/seed.getIns().size();
-			firstRowMap.clear();
-			lastRowMap.clear();
-			FirstLastRow.clear();
-			
-			//逆序查找;
-			InstructionSequence is1 = new InstructionSequence();
-			is1.setFileName(is.getFileName());
-			is1.setIns(ReverseNarration(is.getIns()));
-			getFirstLastRow(is1);
-			firstRowMap = mapRows(FirstLastRow.get(0));
-			lastRowMap = mapRows(FirstLastRow.get(1));
-			double s2 = (BWTSimilarity(firstRowMap, lastRowMap,ReverseNarration(seed.getIns()))+1)/seed.getIns().size();
-			
-			//选择相似度大的;
-			s2c.setClassId(i);
-			s2c.setSimilarity((s1 > s2 ? s1 : s2));
-			simiList.add(s2c);
-			
-			FirstLastRow.clear();
-		}
-		Collections.sort(simiList);
-		int i = 0;
-		for (Similarity2ClassIndex s2c : simiList) {
-			System.out.println(s2c.getClassId() + "  " + s2c.getSimilarity() + "   " + TestLCS.getInsFiles()[s2c.getClassId()]);
-			i++;
-			if (i > 11) {
-				break;
+	public static InstructionSequence getLCSequence(InstructionSequence freq){
+		for (int i = 0; i < LCsequence.size(); i++) {
+			if(freq.getFileName().equals(LCsequence.get(i).getFileName())){
+				return LCsequence.get(i);
 			}
 		}
+		return null;
 	}
 	
+	/**
+	 * 得到InstructionSequence 对应的Reverse Narration LC Sequence;
+	 * */
+	public static InstructionSequence getReverseNarrationLCSequence(InstructionSequence freq){
+		for (int i = 0; i < ReverseNarrationLCSequence.size(); i++) {
+			if(freq.getFileName().equals(ReverseNarrationLCSequence.get(i).getFileName())){
+				return ReverseNarrationLCSequence.get(i);
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * 通过第二种方法来计算两个InstructionSequence 之间的相似度;
+	 * 即在预先计算LC Sequence;
+	 * */
+	public static double getSimilarity2(InstructionSequence seed,InstructionSequence freq){
+		//正序;
+		InstructionSequence is = getLCSequence(freq);
+		getFCFromLC(is);
+		List<Integer> firstRowMap = mapRows(FirstLastRow.get(0));
+		List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
+		double s1 = (BWTSimilarity(firstRowMap, lastRowMap,seed.getIns())+1)/seed.getIns().size();
+		FirstLastRow.clear();
+		
+		//逆序;
+		InstructionSequence is2 = getReverseNarrationLCSequence(freq);
+		getFCFromLC(is2);
+		firstRowMap = mapRows(FirstLastRow.get(0));
+		lastRowMap = mapRows(FirstLastRow.get(1));
+		double s2 = (BWTSimilarity(firstRowMap, lastRowMap,ReverseNarration(seed.getIns()))+1)/seed.getIns().size();
+		FirstLastRow.clear();
+		
+		return (s1 > s2 ? s1 : s2);
+	}
 	
 	
 	/**
@@ -404,17 +416,11 @@ public class BWT {
 	public static void BWTSearch2(InstructionSequence seed){
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
-			InstructionSequence is = LCsequence.get(i);
-			getFCFromLC(is);
-				
-			List<Integer> firstRowMap = mapRows(FirstLastRow.get(0));
-			List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
 			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
 			s2c.setClassId(i);
-			s2c.setSimilarity((BWTSimilarity(firstRowMap, lastRowMap,seed.getIns())+1)/(seed.getIns().size()));
+			s2c.setSimilarity(getSimilarity2(seed,TestLCS.getInstructions().get(i)));
 			simiList.add(s2c);
 			
-			FirstLastRow.clear();
 		}
 		Collections.sort(simiList);
 		int i = 0;
@@ -627,9 +633,6 @@ public class BWT {
 		for (OpCode ops : row) {
 			int id = ops.getCodeId();
 			
-			//System.out.print(id + " ");
-			//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + (i+1));
-			
 			if(RowMap.keySet().contains(id)){
 				int value = RowMap.get(id)+1;
 				list.add(value);
@@ -640,20 +643,7 @@ public class BWT {
 				list.add(1);
 				//System.out.println("list add: " + 1);
 			}
-			
-			//for(int j : RowMap.keySet()){
-			//	System.out.println(j + " " +RowMap.get(j));
-			//}
-			
-			
-			//i++;
-			//if(i > 6)
-			//	break;
 		}
-		
-		//for(int k : list){
-		//	System.out.print(k + " ");
-		//}
 		
 		return list;
 	}
@@ -692,12 +682,6 @@ public class BWT {
 		
 		// 排序;
 		Collections.sort(isList);
-		//for (InstructionSequence ins : isList) {
-		//	for (OpCode ops : ins.getIns()) {
-		//		System.out.print(ops.getCodeId() + " ");
-		//	}
-		//	System.out.println();
-		//}
 		
 		List<OpCode> firstRow = new ArrayList<OpCode>();
 		List<OpCode> lastRow = new ArrayList<OpCode>();
@@ -707,15 +691,6 @@ public class BWT {
 		}
 		FirstLastRow.add(firstRow);
 		FirstLastRow.add(lastRow);
-
-		//System.out.println();
-		//for (OpCode ops : firstRow) {
-		//	System.out.print(ops.getCodeId() + " ");
-		//}
-		//System.out.println();
-		//for (OpCode ops : lastRow) {
-		//	System.out.print(ops.getCodeId() + " ");
-		//}
 	}
 
 	/**
@@ -729,18 +704,47 @@ public class BWT {
 		
 		FirstLastRow.add(firstRow);
 		FirstLastRow.add(lastRow);
-		
-		
-		
-		//for(OpCode op : FirstLastRow.get(0)){
-		//	System.out.println(op.getName() + " " + op.getCodeId());
-		//}
-		//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!");
-		//for(OpCode op : FirstLastRow.get(1)){
-		//	System.out.println(op.getName() + " " + op.getCodeId());
-		//}
-		
 	}
+	
+	/**
+	 * 将逆序L-C Sequence 存入文件;
+	 * 用以进行逆序的快速计算;
+	 * */
+	public static void storeReverseNarrationLCSequence(){
+		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
+			InstructionSequence is = new InstructionSequence(TestLCS.getInstructions().get(i));
+			InstructionSequence is2 = new InstructionSequence();
+			is2.setFileName(is.getFileName());
+			is2.setIns(ReverseNarration(is.getIns()));
+			getFirstLastRow(is2);
+			
+			StringBuffer buffer = new StringBuffer();
+			for(int j = 0;j < FirstLastRow.get(1).size();j++){
+				OpCode op = FirstLastRow.get(1).get(j);
+				buffer.append(op.getName());
+				if(op.getCodeId() == 182 || op.getCodeId() == 183 || op.getCodeId() == 184 || op.getCodeId() == 185 || op.getCodeId() == 186){
+					buffer.append(" " + op.getInvokedMethod());
+				}
+				if(j < FirstLastRow.get(1).size()-1){
+					buffer.append("\n");
+				}
+			}
+			
+			File file = TestLCS.getInsFiles()[i];
+			System.out.println(file.getName());
+			//System.out.println(buffer);
+			
+			try {
+				writeFileContent("F:\\data\\jarFiles\\Top10000\\ReverseNarrationLCSequence\\" + file.getName(),buffer);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			
+			FirstLastRow.clear();
+		}
+	}
+	
 	
 	
 	/**
@@ -772,16 +776,6 @@ public class BWT {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
-			/*
-			for(OpCode op : FirstLastRow.get(0)){
-				System.out.println(op.getName() + " " + op.getCodeId());
-			}
-			System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!");
-			for(OpCode op : FirstLastRow.get(1)){
-				System.out.println(op.getName() + " " + op.getCodeId());
-			}
-			*/
 			
 			FirstLastRow.clear();
 		}
@@ -832,7 +826,7 @@ public class BWT {
 	/**
 	 * 从LCSequence文件中获取数据;
 	 */
-	public static void getInstructionsFromLCFile(String filePath) {
+	public static void getInstructionsFromLCFile(String filePath, int order) {
 		File directory = new File(filePath);
 		File[] insFiles = directory.listFiles();
 		for (File file : insFiles) {
@@ -847,8 +841,6 @@ public class BWT {
 				fis = new FileInputStream(filePath + filename);
 				isr = new InputStreamReader(fis);
 				br = new BufferedReader(isr);
-				// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" +
-				// filename);
 				while ((str = br.readLine()) != null) {
 					// System.out.println(str);
 					// System.out.println(getOpCodeID(str));
@@ -890,10 +882,10 @@ public class BWT {
 			}
 			instrs.setIns(list);
 			instrs.setFileName(filename);
-			LCsequence.add(instrs);
-			//for (OpCode op : instructions.get(0)) {
-			//	System.out.println(op.getName() + " " + op.getInvokedMethod());
-			//}
+			if(order == 0)
+				LCsequence.add(instrs);
+			else if(order == 1)
+				ReverseNarrationLCSequence.add(instrs);
 		}
 	}
 }
