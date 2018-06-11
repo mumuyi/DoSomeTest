@@ -1,10 +1,10 @@
 package cn.nuaa.ai.LCS;
 
-public class Method {
-	private String methodPath;
-	private String methodName;
-	private String methodParameters;
-	private String methodReturnValue;
+public class InvokedMethod {
+	private String methodPath; //0.15;
+	private String methodName; //0.4;
+	private String methodParameters; //0.2;
+	private String methodReturnValue; //0.25;
 
 	public String getMethodPath() {
 		return methodPath;
@@ -43,5 +43,21 @@ public class Method {
 		System.out.println("MethodName: " + this.getMethodName());
 		System.out.println("MethodParameters: " + this.getMethodParameters());
 		System.out.println("MethodReturnValue: " + this.getMethodReturnValue());
+	}
+	
+	public boolean isEquals(InvokedMethod m){
+		if(!this.getMethodName().equals(m.getMethodName())){
+			return false;
+		}
+		if(!this.getMethodPath().equals(m.getMethodPath())){
+			return false;
+		}
+		if(!this.getMethodReturnValue().equals(m.getMethodReturnValue())){
+			return false;
+		}
+		if(!this.getMethodParameters().equals(m.getMethodParameters())){
+			return false;
+		}		
+		return true;
 	}
 }
