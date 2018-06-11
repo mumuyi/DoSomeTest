@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javassist.LoaderClassPath;
-
 public class BWT {
 	private static List<List<OpCode>> FirstLastRow = new ArrayList<List<OpCode>>();
 
@@ -39,7 +37,7 @@ public class BWT {
 		getInstructionsFromLCFile("F:\\data\\jarFiles\\Top100000\\LCsequence\\",0);
 		getInstructionsFromLCFile("F:\\data\\jarFiles\\Top100000\\ReverseNarrationLCSequence\\",1);
 		//读取聚类信息;
-		Map<String, List<String>> clusteringMap = loadClusteringResult("F:\\data\\jarFiles\\Top10000\\ClusteringResult80\\");
+		Map<String, List<String>> clusteringMap = loadClusteringResult("F:\\data\\jarFiles\\Top100000\\ClusteringResult80\\");
 		for(InstructionSequence ins : TestLCS.getInstructions()){
 			insName2IndexList.add(ins.getFileName());
 		}
@@ -50,9 +48,9 @@ public class BWT {
 		//第一种查找方法,在计算的同时去计算LC Sequence;
 		//BWTSearch(TestLCS.getInstructions().get(1069));
 		//第二种查找方法,预先计算LC Sequence;		
-		BWTSearch2(TestLCS.getInstructions().get(1069));
+		//BWTSearch2(TestLCS.getInstructions().get(1069));
 		//在聚类的基础上进行查找;
-		//BWTSearchWithClustering(TestLCS.getInstructions().get(121), clusteringMap);
+		BWTSearchWithClustering(TestLCS.getInstructions().get(1069), clusteringMap);
 		
 		//用来为第二种计算方法预先计算LCsequence的;
 		//storeLCSequence();
@@ -202,21 +200,6 @@ public class BWT {
 	}
 	
 	/**
-	 * 根据方法的完全限定名称得到其对应的指令序列;
-	 * 从TestLCS.getInstructions() 中获取; 不是根据文件名去从文件中重新读取;
-	 * */
-	public static InstructionSequence getInstructionFromFileName(String fileName){
-		for(InstructionSequence ins : TestLCS.getInstructions()){
-			if(ins.getFileName().equals(fileName)){
-				InstructionSequence is = new InstructionSequence(ins);
-				return is;
-			}
-		}
-		return null;
-	}
-	
-	
-	/**
 	 * 删除Instruction Sequence 长度小于20的;
 	 * */
 	public static void removeLessThan20(){
@@ -249,10 +232,7 @@ public class BWT {
 		Map<String,Boolean> map = new HashMap<String,Boolean>();
 			
 		for(int i =0; i < TestLCS.getInstructions().size(); i++){
-			if(TestLCS.getInstructions().get(i).getIns().size() > 20)
-				map.put(TestLCS.getInstructions().get(i).getFileName(), false);
-			else
-				map.put(TestLCS.getInstructions().get(i).getFileName(), true);
+			map.put(TestLCS.getInstructions().get(i).getFileName(), false);
 		}
 		
 		System.out.println("!!!!!!!!!!!!!!! " + "begin to clustering" + " !!!!!!!!!!!!!!!!!!!!!!");
@@ -273,16 +253,19 @@ public class BWT {
 					continue;
 				}
 			
-				similarity = getSimilarity2(is, j);
-
+				similarity = getSimilarity2(controlIns, j);
+				
+				//System.out.println(i + " " + j + " " + similarity);
+				
 				if(similarity >= 0.80){
 					clusteringResult.add(is.getFileName());
 					map.replace(is.getFileName(), true);
 				}
 			}
 			clusteringResultList.add(clusteringResult);
+			System.out.println(clusteringResultList.size());
 		}
-		System.out.println(clusteringResultList.size());
+		//System.out.println(clusteringResultList.size());
 		//for(int i = 0; i < clusteringResultList.size();i++){
 		//	System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!    " + i + "   " + clusteringResultList.get(i).size());
 		//	for(String s : clusteringResultList.get(i)){
@@ -311,7 +294,7 @@ public class BWT {
 			}
 			
 			try {
-				writeFileContent("F:\\data\\jarFiles\\Top10000\\ClusteringResult75\\clusteringResult" + i + ".txt",str);
+				writeFileContent("F:\\data\\jarFiles\\Top100000\\ClusteringResult80\\clusteringResult" + i + ".txt",str);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -344,30 +327,6 @@ public class BWT {
 				break;
 			}
 		}
-	}
-	
-	/**
-	 * 得到InstructionSequence 对应的LC Sequence;
-	 * */
-	public static InstructionSequence getLCSequence(InstructionSequence freq){
-		for (int i = 0; i < LCsequence.size(); i++) {
-			if(freq.getFileName().equals(LCsequence.get(i).getFileName())){
-				return LCsequence.get(i);
-			}
-		}
-		return null;
-	}
-	
-	/**
-	 * 得到InstructionSequence 对应的Reverse Narration LC Sequence;
-	 * */
-	public static InstructionSequence getReverseNarrationLCSequence(InstructionSequence freq){
-		for (int i = 0; i < ReverseNarrationLCSequence.size(); i++) {
-			if(freq.getFileName().equals(ReverseNarrationLCSequence.get(i).getFileName())){
-				return ReverseNarrationLCSequence.get(i);
-			}
-		}
-		return null;
 	}
 	
 	/**
