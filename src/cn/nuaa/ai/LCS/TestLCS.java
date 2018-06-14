@@ -364,7 +364,7 @@ public class TestLCS {
 			instrs.setFileName(filename);
 			instructions.add(instrs);
 			i++;
-			if(i >= 200000)
+			if(i >= 2000)
 			  break;
 		}
 

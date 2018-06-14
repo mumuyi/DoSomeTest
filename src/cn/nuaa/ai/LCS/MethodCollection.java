@@ -1,34 +1,93 @@
 package cn.nuaa.ai.LCS;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class MethodCollection {
 	public static void main(String[] args) {
-		InvokedMethod m1 = methodParse("javax/activation/ActivationDataFlavor.init:(Ljava/lang/String;Ljava/lang/String;)V");
-		InvokedMethod m2 = methodParse("javax/activation/ActivationDataFlavor.init:(Ljava/lang/String;Ljava/lang/String;)V");
+		//InvokedMethod m1 = methodParse("javax/activation/ActivationDataFlavor.init:(Ljava/lang/String;Ljava/lang/String;)V");
+		//InvokedMethod m2 = methodParse("javax/activation111/ActivationDataFlavor.init111:(Ljava/lang/String;Ljava/lang/String;)V");
 		//InvokedMethod m2 = methodParse("getSourceLocation:()Lorg/aspectj/bridge/ISourceLocation");
-		System.out.println(getSimilarityBetweenMethodInvoke(m1, m2));
+		//System.out.println(getSimilarityBetweenMethodInvoke(m1, m2));
 		
 		
 		//System.out.println(getSimilarityBetweenMethodPath("1/2/3/4","1/2/3/4"));
 		//System.out.println(getSimilarityBetweenMethodName("11111111fsdfsdfs","11111111fsdfsdfs"));
 		
-		/*
+		
 		TestLCS.getOpCodeFromFile();
 		TestLCS.getInstructionsFromFile("F:\\data\\jarFiles\\Top100000\\instruction\\");
+		System.out.println("read in process finished");
+		
+		Set<InvokedMethod> seed = instructions2methodset(TestLCS.getInstructions().get(666));
+		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
-			System.out.println(i + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + TestLCS.getInstructions().get(i).getFileName());
-			for(OpCode op : TestLCS.getInstructions().get(i).getIns()){
-				if(op.getCodeId() == 182 || op.getCodeId() == 183 || op.getCodeId() == 184 || op.getCodeId() == 185 || op.getCodeId() == 186){
-					methodParse(op.getInvokedMethod());
+			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
+			s2c.setClassId(i);
+			s2c.setSimilarity(1.0*Intersection(seed,instructions2methodset(TestLCS.getInstructions().get(i)))/union(seed,instructions2methodset(TestLCS.getInstructions().get(i))));
+			simiList.add(s2c);
+		}
+		Collections.sort(simiList);
+		int i = 0;
+		for (Similarity2ClassIndex s2c : simiList) {
+			System.out.println(s2c.getClassId() + "  " + s2c.getSimilarity() + "   " + TestLCS.getInsFiles()[s2c.getClassId()]);
+			i++;
+			if (i > 11) {
+				break;
+			}
+		}
+	}
+
+	
+	/**
+	 * 求交集;
+	 * */
+	public static int Intersection(Set<InvokedMethod> set1,Set<InvokedMethod> set2){
+		int counter = 0;
+		for(InvokedMethod m1 : set1){
+			for(InvokedMethod m2 : set2){
+				if(m1.equals(m2) || getSimilarityBetweenMethodInvoke(m1,m2) > 0.95){
+					counter++;
+					break;
 				}
 			}
 		}
-		*/
+		return counter;
 	}
-
+	
+	/**
+	 * 求并集;
+	 * */
+	public static int union(Set<InvokedMethod> set1,Set<InvokedMethod> set2){
+		Set<InvokedMethod> union = new HashSet<InvokedMethod>();
+		union.addAll(set1);
+		union.addAll(set2);
+		
+		return removeDuplicates(union).size();
+	}
+	
+	/**
+	 * 去重;
+	 * */
+	public static Set<InvokedMethod> removeDuplicates(Set<InvokedMethod> set){
+		List<InvokedMethod> list = new ArrayList<InvokedMethod>(set);
+		List<InvokedMethod> removeList = new ArrayList<InvokedMethod>();
+		for(int i = 0;i < list.size();i++){
+			for(int j = i + 1;j < list.size();j++){
+				if(getSimilarityBetweenMethodInvoke(list.get(i),list.get(j)) > 0.95){
+					removeList.add(list.get(j));
+				}
+			}
+		}
+		list.removeAll(removeList);
+		return new HashSet<InvokedMethod>(list);
+	}
+	
+	
 	/**
 	 * 计算两个方法之间的相似度;
 	 * */
@@ -123,7 +182,7 @@ public class MethodCollection {
 		double Difference = 0.15 / ((length-1) * (length-1) - (length-1));
 		int counter = 0;
 		for(int i = ss1.length - 2,j = ss2.length - 2;i >= 0 && j >= 0;i--,j--,counter++){
-			if(ss1[i].equals(ss2[i])){
+			if(ss1[i].equals(ss2[j])){
 				Similarity += (Weights - (counter * Difference));
 			}
 		}
@@ -217,5 +276,18 @@ public class MethodCollection {
 		//method.showMethod();
 		
 		return method;
+	}
+	
+	/**
+	 * 指令序列转方法集合;
+	 * */
+	public static Set<InvokedMethod> instructions2methodset(InstructionSequence ins){
+		Set<InvokedMethod> set = new HashSet<InvokedMethod>();
+		for(OpCode op : ins.getIns()){
+			if(op.getCodeId() == 182 || op.getCodeId() == 183 || op.getCodeId() == 184 || op.getCodeId() == 185 || op.getCodeId() == 186){
+				set.add(methodParse(op.getInvokedMethod()));
+			}
+		}
+		return set;
 	}
 }
