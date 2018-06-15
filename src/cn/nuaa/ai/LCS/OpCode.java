@@ -1,27 +1,29 @@
 package cn.nuaa.ai.LCS;
 
-public class OpCode implements Comparable<OpCode>{
+public class OpCode implements Comparable<OpCode> {
 	private int codeId;
 	private String code;
 	private String name;
 	private int levle1;
 	private int levle2;
 	private String invokedMethod;
+	private String newType;
 
-	public OpCode(){}
-	
-	public OpCode(OpCode op){
+	public OpCode() {
+	}
+
+	public OpCode(OpCode op) {
 		this.codeId = op.getCodeId();
 		this.code = op.getCode();
 		this.name = op.getName();
 		this.levle1 = op.getLevle1();
 		this.levle2 = op.getLevle2();
-		if(op.getInvokedMethod() != null)
+		if (op.getInvokedMethod() != null)
 			this.invokedMethod = new String(op.getInvokedMethod());
 		else
 			this.invokedMethod = null;
 	}
-	
+
 	public int getCodeId() {
 		return codeId;
 	}
@@ -70,11 +72,19 @@ public class OpCode implements Comparable<OpCode>{
 		this.invokedMethod = invokedMethod;
 	}
 
+	public String getNewType() {
+		return newType;
+	}
+
+	public void setNewType(String newType) {
+		this.newType = newType;
+	}
+
 	@Override
 	public int compareTo(OpCode op) {
-		if(this.getCodeId() < op.getCodeId())
+		if (this.getCodeId() < op.getCodeId())
 			return -1;
-		else if(this.getCodeId() > op.getCodeId())
+		else if (this.getCodeId() > op.getCodeId())
 			return 1;
 		else
 			return 0;

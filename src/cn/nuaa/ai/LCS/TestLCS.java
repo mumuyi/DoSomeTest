@@ -343,6 +343,12 @@ public class TestLCS {
 								op.setInvokedMethod(strs[1]);
 								list.add(op);
 							}
+							else if(strs[0].equals("new")){
+								OpCode op = new OpCode(oplist.get(getOpCodeID(strs[0])));
+								//System.out.println(strs[1]);
+								op.setNewType(strs[1]);
+								list.add(op);
+							}
 						}
 					}
 				}
@@ -364,7 +370,7 @@ public class TestLCS {
 			instrs.setFileName(filename);
 			instructions.add(instrs);
 			i++;
-			if(i >= 2000)
+			if(i >= 100000)
 			  break;
 		}
 

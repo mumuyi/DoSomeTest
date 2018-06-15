@@ -32,15 +32,15 @@ public class BWT {
 		long startTime = System.currentTimeMillis();//记录开始时间
 		
 		TestLCS.getOpCodeFromFile();
-		TestLCS.getInstructionsFromFile("F:\\data\\jarFiles\\Top100000\\instruction\\");
+		TestLCS.getInstructionsFromFile("F:\\data\\jarFiles\\Top100000N\\instruction\\");
 		//从LC文件中读取LC序列;第一种计算方法不需要读取这个信息,第二种计算方法才需要;
-		getInstructionsFromLCFile("F:\\data\\jarFiles\\Top100000\\LCsequence\\",0);
-		getInstructionsFromLCFile("F:\\data\\jarFiles\\Top100000\\ReverseNarrationLCSequence\\",1);
+		//getInstructionsFromLCFile("F:\\data\\jarFiles\\Top100000N\\LCsequence\\",0);
+		//getInstructionsFromLCFile("F:\\data\\jarFiles\\Top100000N\\ReverseNarrationLCSequence\\",1);
 		//读取聚类信息;
-		Map<String, List<String>> clusteringMap = loadClusteringResult("F:\\data\\jarFiles\\Top100000\\ClusteringResult80\\");
-		for(InstructionSequence ins : TestLCS.getInstructions()){
-			insName2IndexList.add(ins.getFileName());
-		}
+		//Map<String, List<String>> clusteringMap = loadClusteringResult("F:\\data\\jarFiles\\Top100000N\\ClusteringResult80\\");
+		//for(InstructionSequence ins : TestLCS.getInstructions()){
+		//	insName2IndexList.add(ins.getFileName());
+		//}
 		System.out.println("!!!!!!!!!!!!! readin process finished !!!!!!!!!!!!!!!!!!");
 
 		long readTime=System.currentTimeMillis();//记录结束时间
@@ -670,6 +670,8 @@ public class BWT {
 				buffer.append(op.getName());
 				if(op.getCodeId() == 182 || op.getCodeId() == 183 || op.getCodeId() == 184 || op.getCodeId() == 185 || op.getCodeId() == 186){
 					buffer.append(" " + op.getInvokedMethod());
+				}else if(op.getCodeId() == 187){
+					buffer.append(" " + op.getNewType());
 				}
 				if(j < FirstLastRow.get(1).size()-1){
 					buffer.append("\n");
@@ -707,6 +709,8 @@ public class BWT {
 				buffer.append(op.getName());
 				if(op.getCodeId() == 182 || op.getCodeId() == 183 || op.getCodeId() == 184 || op.getCodeId() == 185 || op.getCodeId() == 186){
 					buffer.append(" " + op.getInvokedMethod());
+				}else if(op.getCodeId() == 187){
+					buffer.append(" " + op.getNewType());
 				}
 				if(j < FirstLastRow.get(1).size()-1){
 					buffer.append("\n");
