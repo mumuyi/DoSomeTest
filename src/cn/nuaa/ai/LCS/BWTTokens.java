@@ -9,57 +9,43 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-public class BWTCodeLines {
-	private static List<SourceCode> codeSnippets = new ArrayList<SourceCode>();
-	private static List<List<TokenList>> FirstLastRow = new ArrayList<List<TokenList>>();
+public class BWTTokens {
+	private static List<TokenList> codeSnippets = new ArrayList<TokenList>();
+	private static List<List<String>> FirstLastRow = new ArrayList<List<String>>();
 	private static File[] insFiles;
 
 	public static void main(String[] args) {
 
 		readCode("F:\\data\\jarFiles\\Top100000N\\methodbody\\");
 		System.out.println("read in process finished");
-		// for(SourceCode lls : codeSnippets){
-		// System.out.println("File name: " + lls.getId() + " " +
-		// lls.getName());
-		// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-		// for(TokenList ls : lls.getCodes()){
+
+		// for(TokenList ls : codeSnippets){
 		// for(String s : ls.getTokens()){
 		// System.out.print(s + " ");
 		// }
 		// System.out.println();
-		// }
 		// }
 
 		// getFirstLastRow(codeSnippets.get(0));
 		// List<Integer> firstRowMap = mapRows(FirstLastRow.get(0));
 		// List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
 		// BurrowsWheelerTransform(firstRowMap,lastRowMap,0,FirstLastRow.get(1).size()-1);
-		// System.out.println(getSimilarity(codeSnippets.get(1),codeSnippets.get(1)));
+
+		// System.out.println(getSimilarity(codeSnippets.get(0),codeSnippets.get(0)));
 
 		BWTSearch(codeSnippets.get(666));
-
-		// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-		// List<TokenList> ltl = FirstLastRow.get(1);
-		// for(TokenList tl : ltl){
-		// for(String s : tl.getTokens())
-		// System.out.print(s + " ");
-		// System.out.println();
-		// }
-
 	}
 
 	/**
 	 * 在计算的过程中计算LC;
 	 */
-	public static void BWTSearch(SourceCode seed) {
+	public static void BWTSearch(TokenList seed) {
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < codeSnippets.size(); i++) {
-			SourceCode is = new SourceCode(codeSnippets.get(i));
+			TokenList is = new TokenList(codeSnippets.get(i));
 			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
 			s2c.setClassId(i);
 			s2c.setSimilarity(getSimilarity(seed, is));
@@ -81,14 +67,14 @@ public class BWTCodeLines {
 	/**
 	 * 通过第一种方法来计算两个InstructionSequence 之间的相似度; 即在计算的过程中来计算LC Sequence;
 	 */
-	public static double getSimilarity(SourceCode seed, SourceCode freq) {
+	public static double getSimilarity(TokenList seed, TokenList freq) {
 		// System.out.println(seed.getFileName());
 		// 正序查找;
-		getFirstLastRow(new SourceCode(freq));
+		getFirstLastRow(new TokenList(freq));
 		List<Integer> firstRowMap = mapRows(FirstLastRow.get(0));
 		List<Integer> lastRowMap = mapRows(FirstLastRow.get(1));
 
-		double s1 = (BWTSimilarity(firstRowMap, lastRowMap, seed.getCodes()) + 1) / seed.getCodes().size();
+		double s1 = (BWTSimilarity(firstRowMap, lastRowMap, seed) + 1) / seed.getTokens().size();
 		firstRowMap.clear();
 		lastRowMap.clear();
 		FirstLastRow.clear();
@@ -99,15 +85,15 @@ public class BWTCodeLines {
 	/**
 	 * BWT 字串匹配相似度计算算法实现;
 	 */
-	public static double BWTSimilarity(List<Integer> firstRowMap, List<Integer> lastRowMap, List<TokenList> seedList) {
+	public static double BWTSimilarity(List<Integer> firstRowMap, List<Integer> lastRowMap, TokenList seedList) {
 		double similarScore = 0.0;
 		double threshold = 0.0;
 		List<Integer> startPointList = null;
 		for (int i = 0; i < 3; i++) {
-			if (seedList.size() - 1 - i < 0) {
+			if (seedList.getTokens().size() - 1 - i < 0) {
 				break;
 			}
-			startPointList = getStartPoint(seedList.get(seedList.size() - 1 - i));
+			startPointList = getStartPoint(seedList.getTokens().get(seedList.getTokens().size() - 1 - i));
 			if (startPointList != null && !startPointList.isEmpty()) {
 				break;
 			}
@@ -124,14 +110,14 @@ public class BWTCodeLines {
 			int startPoint = startPointList.get(i);
 			// System.out.println("startPointList: " + startPointList.get(i));
 			double tempSimilarity = 0.0;
-			TokenList freqOp = null;
-			TokenList freqOp1 = null;
+			String freqOp = null;
+			String freqOp1 = null;
 			threshold = 0;
-			for (int j = seedList.size() - 2; (j > -1) && (threshold < 3); j--) {
+			for (int j = seedList.getTokens().size() - 2; (j > -1) && (threshold < 3); j--) {
 				// System.out.println(i + " " + j);
 				double dtemp = -1.0;
-				TokenList seedOp = seedList.get(j);
-				List<TokenList> freqTokenList = BurrowsWheelerTransform(firstRowMap, lastRowMap, startPoint, 2);
+				String seedOp = seedList.getTokens().get(j);
+				List<String> freqTokenList = BurrowsWheelerTransform(firstRowMap, lastRowMap, startPoint, 2);
 				if (freqTokenList == null) {
 					break;
 				} else if (freqTokenList.size() > 1) {
@@ -148,28 +134,28 @@ public class BWTCodeLines {
 
 				double s1 = 0.0;
 				double s2 = 0.0;
-				if (isEquals(freqOp, seedOp)) {
-					tempSimilarity += getSimilarityBetweenLine(seedOp, freqOp);
+				if (freqOp.equals(seedOp)) {
+					tempSimilarity += 1;
 				} else if (freqOp1 != null) {
-					s1 = getSimilarityBetweenLine(seedOp, freqOp);
-					s2 = getSimilarityBetweenLine(seedOp, freqOp1);
+					s1 = getSimilarityBetweenTokens(seedOp, freqOp);
+					s2 = getSimilarityBetweenTokens(seedOp, freqOp1);
 					s2 -= 0.2;
 					dtemp = s1 > s2 ? s1 : s2;
 					tempSimilarity += dtemp;
 					// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 				} else {
-					tempSimilarity += getSimilarityBetweenLine(seedOp, freqOp);
+					tempSimilarity += getSimilarityBetweenTokens(seedOp, freqOp);
 				}
 
 				if (dtemp == s2) {
 					threshold += 1;
-					int temp = getFirstIndex(firstRowMap, freqOp.getTokens().get(0), lastRowMap.get(startPoint));
-					startPoint = getFirstIndex(firstRowMap, freqOp1.getTokens().get(0), lastRowMap.get(temp));
+					int temp = getFirstIndex(firstRowMap, freqOp, lastRowMap.get(startPoint));
+					startPoint = getFirstIndex(firstRowMap, freqOp1, lastRowMap.get(temp));
 					if (startPoint == -1) {
 						break;
 					}
 				} else {
-					startPoint = getFirstIndex(firstRowMap, freqOp.getTokens().get(0), lastRowMap.get(startPoint));
+					startPoint = getFirstIndex(firstRowMap, freqOp, lastRowMap.get(startPoint));
 					if (startPoint == -1) {
 						break;
 					}
@@ -183,55 +169,36 @@ public class BWTCodeLines {
 		return similarScore;
 	}
 
-	public static boolean isEquals(TokenList list1, TokenList list2) {
-		if (getSimilarityBetweenLine(list1, list2) > 0.8) {
-			return true;
+	/**
+	 * 计算两个方法名之间的相似度;
+	 */
+	public static double getSimilarityBetweenTokens(String name1, String name2) {
+		// 正序;
+		int counter = 0;
+		for (int i = 0; i < name1.length() && i < name2.length(); i++) {
+			if (name1.charAt(i) == name2.charAt(i)) {
+				counter++;
+			}
 		}
-		return false;
-	}
-
-	public static double getSimilarityBetweenLine(TokenList list1, TokenList list2) {
-		Set<String> set1 = new HashSet<String>(list1.getTokens());
-		Set<String> set2 = new HashSet<String>(list2.getTokens());
-
-		Set<String> intersection = new HashSet<String>();
-		intersection.addAll(set1);
-		intersection.retainAll(set2);
-
-		Set<String> union = new HashSet<String>();
-		union.addAll(set1);
-		union.addAll(set2);
-		/*
-		System.out.println("!!!!!!!!!!!!!!!!!" + 1.0 * intersection.size() / union.size() + " " + intersection.size() + " " + union.size());
-		if(1.0 * intersection.size() / union.size() == 0){
-			for(String s : set1){
-				System.out.print(s + " ");
+		double s1 = 1.0 * counter / (name1.length() < name2.length() ? name1.length() : name2.length());
+		// 逆序;
+		counter = 0;
+		for (int i = name1.length() - 1, j = name2.length() - 1; i >= 0 && j >= 0; i--, j--) {
+			if (name1.charAt(i) == name2.charAt(j)) {
+				counter++;
 			}
-			System.out.print(" +++++++++++++++++++++++++++++++++++++++++++ ");
-			for(String s : list1.getTokens()){
-				System.out.print(s + " ");
-			}
-			System.out.println("");
-			for(String s : set2){
-				System.out.print(s + " ");
-			}
-			System.out.print(" +++++++++++++++++++++++++++++++++++++++++++ ");
-			for(String s : list2.getTokens()){
-				System.out.print(s + " ");
-			}
-			System.out.println("");
 		}
-		*/
-		return (1.0 * intersection.size() / union.size());
+		double s2 = 1.0 * counter / (name1.length() < name2.length() ? name1.length() : name2.length());
+		return s1 > s2 ? s1 : s2;
 	}
 
 	/**
 	 * 获取seed在freq中的开始位置列表;
 	 */
-	public static List<Integer> getStartPoint(TokenList seedLast) {
+	public static List<Integer> getStartPoint(String seedLast) {
 		List<Integer> list = new ArrayList<Integer>();
 		for (int i = 0; i < FirstLastRow.get(0).size(); i++) {
-			if (FirstLastRow.get(0).get(i).getTokens().get(0).equals(seedLast.getTokens().get(0))) {
+			if (FirstLastRow.get(0).get(i).equals(seedLast)) {
 				list.add(i);
 			}
 		}
@@ -242,20 +209,20 @@ public class BWTCodeLines {
 	 * BWT 算法实现; startPosition 表示LastList中开始的位置; 如果想要复现原串 startPosition = 0;N =
 	 * FirstLastRow.get(1).size()-1;
 	 */
-	public static List<TokenList> BurrowsWheelerTransform(List<Integer> firstRowMap, List<Integer> lastRowMap,
+	public static List<String> BurrowsWheelerTransform(List<Integer> firstRowMap, List<Integer> lastRowMap,
 			int startPosition, int N) {
 		int Lindex = startPosition;
 		int Findex = 0;
 		String preToken = null;
 		int preNum = 0;
-		List<TokenList> list = new ArrayList<TokenList>();
+		List<String> list = new ArrayList<String>();
 
 		for (int i = 0; (i < N) && (FirstLastRow.get(1).size() > Lindex)
-				&& !(FirstLastRow.get(1).get(Lindex).getTokens().get(0).equals(" ")); i++) {
+				&& !(FirstLastRow.get(1).get(Lindex).equals("AA")); i++) {
 			list.add(FirstLastRow.get(1).get(Lindex));
 			// System.out.println("List add: " +
 			// FirstLastRow.get(1).get(Lindex).getCodeId());
-			preToken = FirstLastRow.get(1).get(Lindex).getTokens().get(0);
+			preToken = FirstLastRow.get(1).get(Lindex);
 			preNum = lastRowMap.get(Lindex);
 			Findex = getFirstIndex(firstRowMap, preToken, preNum);
 			// System.out.println("Findex: " + Findex);
@@ -266,10 +233,9 @@ public class BWTCodeLines {
 			Lindex = Findex;
 		}
 		// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-		// for(TokenList tl : list){
-		// for(String s : tl.getTokens())
-		// System.out.print(s + " ");
-		// System.out.println();
+		// System.out.println(list.size());
+		// for(String tl : list){
+		// System.out.print(tl + " ");
 		// }
 
 		return list;
@@ -278,12 +244,12 @@ public class BWTCodeLines {
 	/**
 	 * 计算FirstList和LastList 中的每个元素是第几次出现;
 	 */
-	public static List<Integer> mapRows(List<TokenList> row) {
+	public static List<Integer> mapRows(List<String> row) {
 		List<Integer> list = new ArrayList<Integer>();
 		Map<String, Integer> RowMap = new HashMap<String, Integer>();
 		// int i = 0;
-		for (TokenList tl : row) {
-			String token = tl.getTokens().get(0);
+		for (String tl : row) {
+			String token = tl;
 
 			if (RowMap.keySet().contains(token)) {
 				int value = RowMap.get(token) + 1;
@@ -303,58 +269,36 @@ public class BWTCodeLines {
 	/**
 	 * 得到FirstRow 和 LastRow;
 	 */
-	public static void getFirstLastRow(SourceCode code) {
-		List<SourceCode> scList = new ArrayList<SourceCode>();
+	public static void getFirstLastRow(TokenList code) {
+		List<TokenList> scList = new ArrayList<TokenList>();
 
 		// 添加$符号;
-		TokenList tl = new TokenList();
-		List<String> templist = new ArrayList<String>();
-		templist.add(" ");
-		tl.setTokens(templist);
-		List<TokenList> tll = code.getCodes();
-		tll.add(0, tl);
-		code.setCodes(tll);
+		List<String> templist = code.getTokens();
+		templist.add("AA");
+		code.setTokens(templist);
 
-		SourceCode locaCode = new SourceCode(code);
-		for (int i = 0; i < code.getCodes().size(); i++) {
-			SourceCode temp = new SourceCode(locaCode);
-			List<TokenList> tempTokenList = temp.getCodes();
-			TokenList tempToken = new TokenList(tempTokenList.get(tempTokenList.size() - 1));
+		TokenList locaCode = new TokenList(code);
+		for (int i = 0; i < code.getTokens().size(); i++) {
+			TokenList temp = new TokenList(locaCode);
+			List<String> tempTokenList = temp.getTokens();
+			String tempToken = tempTokenList.get(tempTokenList.size() - 1);
 			tempTokenList.remove(tempTokenList.size() - 1);
 			tempTokenList.add(0, tempToken);
-			temp.setCodes(tempTokenList);
+			temp.setTokens(tempTokenList);
 
 			scList.add(temp);
 
 			locaCode = temp;
 		}
 
-		// for(SourceCode sc : scList){
-		// for(TokenList temptl : sc.getCodes()){
-		// for(String s : temptl.getTokens()){
-		// System.out.print(s + " ");
-		// }
-		// }
-		// System.out.println();
-		// }
-
 		// 排序;
 		Collections.sort(scList);
-		// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-		// for(SourceCode sc : scList){
-		// for(TokenList temptl : sc.getCodes()){
-		// for(String s : temptl.getTokens()){
-		// System.out.print(s + " ");
-		// }
-		// }
-		// System.out.println();
-		// }
 
-		List<TokenList> firstRow = new ArrayList<TokenList>();
-		List<TokenList> lastRow = new ArrayList<TokenList>();
-		for (SourceCode ins : scList) {
-			firstRow.add(ins.getCodes().get(0));
-			lastRow.add(ins.getCodes().get(ins.getCodes().size() - 1));
+		List<String> firstRow = new ArrayList<String>();
+		List<String> lastRow = new ArrayList<String>();
+		for (TokenList ins : scList) {
+			firstRow.add(ins.getTokens().get(0));
+			lastRow.add(ins.getTokens().get(ins.getTokens().size() - 1));
 		}
 		FirstLastRow.add(firstRow);
 		FirstLastRow.add(lastRow);
@@ -365,7 +309,7 @@ public class BWTCodeLines {
 	 */
 	public static int getFirstIndex(List<Integer> firstRowMap, String preLine, int preNum) {
 		for (int i = 0; i < firstRowMap.size(); i++) {
-			if ((firstRowMap.get(i) == preNum) && (FirstLastRow.get(0).get(i).getTokens().get(0).equals(preLine))) {
+			if ((firstRowMap.get(i) == preNum) && (FirstLastRow.get(0).get(i).equals(preLine))) {
 				return i;
 			}
 		}
@@ -379,13 +323,14 @@ public class BWTCodeLines {
 		File directory = new File(filePath);
 		insFiles = directory.listFiles();
 		for (int i = 0; i < insFiles.length; i++) {
-			List<TokenList> linecode = readCodeFromFile(filePath + insFiles[i].getName());
-			SourceCode sc = new SourceCode();
-			sc.setCodes(linecode);
-			sc.setId(i);
-			sc.setName(insFiles[i].getName());
-			codeSnippets.add(sc);
-
+			List<String> list = readCodeFromFile(filePath + insFiles[i].getName());
+			if (!list.isEmpty()) {
+				TokenList code = new TokenList();
+				code.setId(i);
+				code.setName(insFiles[i].getName());
+				code.setTokens(list);
+				codeSnippets.add(code);
+			}
 			// break;
 		}
 	}
@@ -393,8 +338,9 @@ public class BWTCodeLines {
 	/**
 	 * 从文件中读取代码;
 	 */
-	private static List<TokenList> readCodeFromFile(String path) {
-		List<TokenList> code = new ArrayList<TokenList>();
+	private static List<String> readCodeFromFile(String path) {
+		List<String> list = null;
+		String buffer = "";
 		FileInputStream fis = null;
 		InputStreamReader isr = null;
 		BufferedReader br = null; // 用于包装InputStreamReader,提高处理性能。因为BufferedReader有缓冲的，而InputStreamReader没有。
@@ -406,11 +352,11 @@ public class BWTCodeLines {
 			br = new BufferedReader(isr);// 从字符输入流中读取文件中的内容,封装了一个new
 											// InputStreamReader的对象
 			while ((str = br.readLine()) != null) {
-				TokenList tl = new TokenList();
-				tl.setTokens(getTokenList(str));
-				if (!tl.getTokens().isEmpty())
-					code.add(tl);
+				buffer += (str + " ");
 			}
+
+			list = getTokenList(buffer);
+
 		} catch (FileNotFoundException e) {
 			System.out.println("找不到指定文件");
 		} catch (IOException e) {
@@ -425,7 +371,7 @@ public class BWTCodeLines {
 				e.printStackTrace();
 			}
 		}
-		return code;
+		return list;
 	}
 
 	/**
