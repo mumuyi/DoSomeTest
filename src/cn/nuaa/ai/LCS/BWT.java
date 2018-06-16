@@ -46,7 +46,7 @@ public class BWT {
 		long readTime=System.currentTimeMillis();//记录结束时间
 		
 		//第一种查找方法,在计算的同时去计算LC Sequence;
-		BWTSearch(TestLCS.getInstructions().get(666));
+		BWTSearch(TestLCS.getInstructions().get(973));
 		//第二种查找方法,预先计算LC Sequence;		
 		//BWTSearch2(TestLCS.getInstructions().get(666));
 		//在聚类的基础上进行查找;

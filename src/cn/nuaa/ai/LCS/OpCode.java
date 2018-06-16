@@ -22,6 +22,10 @@ public class OpCode implements Comparable<OpCode> {
 			this.invokedMethod = new String(op.getInvokedMethod());
 		else
 			this.invokedMethod = null;
+		if (op.getNewType() != null)
+			this.newType = new String(op.getNewType());
+		else
+			this.newType = null;
 	}
 
 	public int getCodeId() {

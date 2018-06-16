@@ -23,7 +23,7 @@ public class MethodCollection {
 		TestLCS.getInstructionsFromFile("F:\\data\\jarFiles\\Top100000\\instruction\\");
 		System.out.println("read in process finished");
 		
-		Set<InvokedMethod> seed = instructions2methodset(TestLCS.getInstructions().get(666));
+		Set<InvokedMethod> seed = instructions2methodset(TestLCS.getInstructions().get(1069));
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < TestLCS.getInstructions().size(); i++) {
 			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
