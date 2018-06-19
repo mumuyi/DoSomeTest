@@ -41,7 +41,7 @@ public class BWTCodeLines {
 		// BurrowsWheelerTransform(firstRowMap,lastRowMap,0,FirstLastRow.get(1).size()-1);
 		// System.out.println(getSimilarity(codeSnippets.get(1),codeSnippets.get(1)));
 
-		BWTSearch(codeSnippets.get(666));
+		BWTSearch(codeSnippets.get(0));
 
 		// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		// List<TokenList> ltl = FirstLastRow.get(1);

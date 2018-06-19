@@ -40,6 +40,7 @@ public class MyFormat {
 		
 		//从文件中获取源码;并对其进行格式化;
 		String code = codeFormat(addClassHead(readCodeFromFile("F:\\data\\jarFiles\\Top100000N\\methodbody\\1.txt")));
+		//System.out.println(code);
 		//解析代码;获取变量声明信息;
 		SingleFileTest(code);
 		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -143,6 +144,7 @@ public class MyFormat {
 		} catch (BadLocationException e) {
 			e.printStackTrace();
 		}
+		//System.out.println(doc.get());
 		return doc.get();
 	}
 	
@@ -150,6 +152,7 @@ public class MyFormat {
 	 * 添加类结构;
 	 * */
 	private static String addClassHead(String code){
+		//System.out.println("public class test{" + code + "}");
 		return "public class test{" + code + "}";
 	}
 	
@@ -170,7 +173,9 @@ public class MyFormat {
 			br = new BufferedReader(isr);// 从字符输入流中读取文件中的内容,封装了一个new
 											// InputStreamReader的对象
 			while ((str = br.readLine()) != null) {
-				code += str;
+				//因为Format方法不能处理List<String> list = new ArrarList<String>(); 中的<String>这种写法;
+				//因此在这里去掉这部分内容;
+				code += (str.replaceAll("\\<.*?\\>", "") + "\n");
 			}
 		} catch (FileNotFoundException e) {
 			System.out.println("找不到指定文件");
@@ -186,6 +191,7 @@ public class MyFormat {
 				e.printStackTrace();
 			}
 		}
+		//System.out.println(code);
 		return code;
 	}
 }
