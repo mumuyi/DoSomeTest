@@ -51,6 +51,10 @@ public class BWTCodeLines {
 		// System.out.println();
 		// }
 
+		//System.out.println(codeSnippets.get(0).getCodes().get(0).getTokens());
+		//System.out.println(codeSnippets.get(0).getName());
+		//System.out.println(getSimilarityBetweenLine2(codeSnippets.get(0).getCodes().get(0),codeSnippets.get(1).getCodes().get(0)));
+		
 	}
 
 	/**
@@ -149,16 +153,16 @@ public class BWTCodeLines {
 				double s1 = 0.0;
 				double s2 = 0.0;
 				if (isEquals(freqOp, seedOp)) {
-					tempSimilarity += getSimilarityBetweenLine(seedOp, freqOp);
+					tempSimilarity += getSimilarityBetweenLine2(seedOp, freqOp);
 				} else if (freqOp1 != null) {
-					s1 = getSimilarityBetweenLine(seedOp, freqOp);
-					s2 = getSimilarityBetweenLine(seedOp, freqOp1);
+					s1 = getSimilarityBetweenLine2(seedOp, freqOp);
+					s2 = getSimilarityBetweenLine2(seedOp, freqOp1);
 					s2 -= 0.2;
 					dtemp = s1 > s2 ? s1 : s2;
 					tempSimilarity += dtemp;
 					// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 				} else {
-					tempSimilarity += getSimilarityBetweenLine(seedOp, freqOp);
+					tempSimilarity += getSimilarityBetweenLine2(seedOp, freqOp);
 				}
 
 				if (dtemp == s2) {
@@ -183,13 +187,19 @@ public class BWTCodeLines {
 		return similarScore;
 	}
 
+	/**
+	 * 判断两个TokenList 是否相等;
+	 * */
 	public static boolean isEquals(TokenList list1, TokenList list2) {
-		if (getSimilarityBetweenLine(list1, list2) > 0.8) {
+		if (getSimilarityBetweenLine2(list1, list2) > 0.8) {
 			return true;
 		}
 		return false;
 	}
 
+	/**
+	 * 计算两个TokenList 的相似度;
+	 * */
 	public static double getSimilarityBetweenLine(TokenList list1, TokenList list2) {
 		Set<String> set1 = new HashSet<String>(list1.getTokens());
 		Set<String> set2 = new HashSet<String>(list2.getTokens());
@@ -225,6 +235,30 @@ public class BWTCodeLines {
 		return (1.0 * intersection.size() / union.size());
 	}
 
+	/**
+	 * 计算两个TokenList 的相似度;
+	 * */
+	public static double getSimilarityBetweenLine2(TokenList list1, TokenList list2) {
+		int length1 = list1.getTokens().size();
+		int length2 = list2.getTokens().size();
+		Set<String> set1 = new HashSet<String>(list1.getTokens());
+		int k1 =  2;
+		double b = 0.75;
+		double score = 0.0;
+		int avgdl = 10;
+		for(String s : set1){
+			int count1 = Collections.frequency(list1.getTokens(), s);
+			//double weight = Math.log(1.0*length1/count1);
+			double weight = 1.0*count1/length1;
+			int f1 = Collections.frequency(list2.getTokens(), s);
+			double r = f1 * (k1 + 1) / (f1 * (k1 + 0.85) + (1 - b + 1.0 * b * length2 / avgdl));
+			score += weight * r;
+			//System.out.println("!!!!!!!!!!" + count1 + " " + weight + " " + f1 + " " + r + " " + score);
+		}		
+		return score;
+	}
+	
+	
 	/**
 	 * 获取seed在freq中的开始位置列表;
 	 */
@@ -386,7 +420,8 @@ public class BWTCodeLines {
 			sc.setName(insFiles[i].getName());
 			codeSnippets.add(sc);
 
-			// break;
+			if(i > 2000000)
+				break;
 		}
 	}
 

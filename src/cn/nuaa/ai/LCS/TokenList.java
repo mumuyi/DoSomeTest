@@ -61,4 +61,28 @@ public class TokenList implements Comparable<TokenList>{
 		return 0;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof TokenList) {
+			TokenList m = (TokenList) obj;
+			if(m.getTokens().size() != this.getTokens().size())
+				return false;
+			for(int i = 0;i < m.getTokens().size();i++){
+				if(!m.getTokens().get(i).equals(this.getTokens().get(i))){
+					return false;
+				}
+			}
+			return true;
+		}
+		return super.equals(obj);
+	}
+
+	@Override
+	public int hashCode() {
+		String s = "";
+		for(int i = 0;i < this.getTokens().size();i++){
+			s += this.getTokens().get(i);
+		}
+		return s.hashCode();
+	}
 }
