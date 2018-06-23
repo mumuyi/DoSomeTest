@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 
 public class BWTCodeLines {
@@ -21,8 +22,8 @@ public class BWTCodeLines {
 
 	public static void main(String[] args) {
 
-		readCode("F:\\data\\jarFiles\\Top100000N\\methodbody\\");
-		System.out.println("read in process finished");
+		//readCode("F:\\data\\jarFiles\\Top100000N\\methodbody\\");
+		//System.out.println("read in process finished");
 		// for(SourceCode lls : codeSnippets){
 		// System.out.println("File name: " + lls.getId() + " " +
 		// lls.getName());
@@ -41,8 +42,11 @@ public class BWTCodeLines {
 		// BurrowsWheelerTransform(firstRowMap,lastRowMap,0,FirstLastRow.get(1).size()-1);
 		// System.out.println(getSimilarity(codeSnippets.get(1),codeSnippets.get(1)));
 
-		BWTSearch(codeSnippets.get(0));
+		//BWTSearch(codeSnippets.get(0));
 
+		runningDemo();
+		
+		
 		// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		// List<TokenList> ltl = FirstLastRow.get(1);
 		// for(TokenList tl : ltl){
@@ -57,6 +61,123 @@ public class BWTCodeLines {
 		
 	}
 
+	/**
+	 * 运行demo;
+	 * */
+	public static void runningDemo(){
+		long startTime = System.currentTimeMillis();//记录读取数据开始时间;
+		readCode("F:\\data\\jarFiles\\Top100000N\\methodbody\\");
+		System.out.println("read in process finished");
+		long endTime=System.currentTimeMillis();//记录读取数据结束时间;
+		System.out.println("read in time："+ (endTime - startTime));
+		while(true){
+			startTime = System.currentTimeMillis();//记录查询开始时间;
+			
+			List<TokenList> linecode = readCodeFromFile("F:\\data\\jarFiles\\Top100000N\\methodbody\\0.txt");
+			SourceCode sc = new SourceCode();
+
+			
+			List<List<TokenList>> cutCode = SourceCodeCutting(linecode);
+			if(cutCode.get(0).isEmpty() && cutCode.get(1).isEmpty()){
+				System.out.println("Seed code format error");
+			}
+			if(cutCode.get(0).isEmpty()){
+				sc.setCodes(cutCode.get(1));
+				sc.setId(-1);
+				sc.setName("seed code");
+				BWTSearch(sc);
+				//System.out.println("1111111111111111111111111111111111");
+			}else if(cutCode.get(1).isEmpty()){
+				sc.setCodes(cutCode.get(0));
+				sc.setId(-1);
+				sc.setName("seed code");
+				BWTSearch(sc);
+				//System.out.println("2222222222222222222222222222222222");
+			}else{
+				SourceCode fsc = new SourceCode();
+				fsc.setCodes(cutCode.get(0));
+				fsc.setId(-1);
+				fsc.setName("seed code");
+				
+				SourceCode bsc = new SourceCode();
+				bsc.setCodes(cutCode.get(1));
+				bsc.setId(-1);
+				bsc.setName("seed code");
+				
+				List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
+				for (int i = 0; i < codeSnippets.size(); i++) {
+					SourceCode is = new SourceCode(codeSnippets.get(i));
+					Similarity2ClassIndex s2c = new Similarity2ClassIndex();
+					s2c.setClassId(i);
+					s2c.setSimilarity((0.5 * getSimilarity(fsc, is)) + (0.5 * getSimilarity(bsc, is)));
+					simiList.add(s2c);
+
+					FirstLastRow.clear();
+				}
+				Collections.sort(simiList);
+				int i = 0;
+				for (Similarity2ClassIndex s2c : simiList) {
+					System.out.println(s2c.getClassId() + "  " + s2c.getSimilarity() + "   " + insFiles[s2c.getClassId()]);
+					i++;
+					if (i > 11) {
+						break;
+					}
+				}
+				//System.out.println("333333333333333333333333333333333333333333");
+			}
+
+			endTime=System.currentTimeMillis();//记录查询结束时间;
+			System.out.println("search time："+ (endTime - startTime));
+			
+	        @SuppressWarnings("resource")
+			Scanner sb = new Scanner(System.in);  
+	        System.out.print("Continue or Not: ");  
+	        String com = sb.nextLine();
+	        if(com.equals("y") || com.equals("Y")){
+	        	continue;
+	        }else{
+	        	break;
+	        }
+		}
+	}
+	
+	/**
+	 * 对需要查询的代码进行切割;
+	 * 取前5行和后5行;
+	 * */
+	public static List<List<TokenList>> SourceCodeCutting(List<TokenList> code){
+		
+		//System.out.println(code.get(4).getTokens());
+		
+		
+		List<List<TokenList>> cutCode = new ArrayList<List<TokenList>>();
+		
+		List<TokenList> frontCode = new ArrayList<TokenList>();
+		List<TokenList> backCode = new ArrayList<TokenList>();
+		int i = 0;
+		for(i = 0;i < code.size();i++){
+			if(code.get(i).getTokens().contains("mycursorposition")){
+				//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+				break;
+			}
+		}
+		int front = (i - 5) >= 0 ? (i - 5) : 0;
+		int back = (i + 5) < code.size() ? (i + 5) : (code.size()-1);
+		
+		for(int j = front;j < i;j++){
+			frontCode.add(code.get(j));
+		}
+		for(int j = i + 1;j <= back;j++){
+			backCode.add(code.get(j));
+		}
+		
+		cutCode.add(frontCode);
+		cutCode.add(backCode);
+		
+		return cutCode;
+	}
+	
+	
 	/**
 	 * 在计算的过程中计算LC;
 	 */
@@ -239,6 +360,11 @@ public class BWTCodeLines {
 	 * 计算两个TokenList 的相似度;
 	 * */
 	public static double getSimilarityBetweenLine2(TokenList list1, TokenList list2) {
+		
+		if(list2.getTokens().containsAll(list1.getTokens())){
+			return 1.0;
+		}
+		
 		int length1 = list1.getTokens().size();
 		int length2 = list2.getTokens().size();
 		Set<String> set1 = new HashSet<String>(list1.getTokens());
