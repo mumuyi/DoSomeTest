@@ -69,7 +69,7 @@ public class BWTCodeLines {
 		readCode("F:\\data\\jarFiles\\Top100000N\\methodbody\\");
 		System.out.println("read in process finished");
 		long endTime=System.currentTimeMillis();//记录读取数据结束时间;
-		System.out.println("read in time："+ (endTime - startTime));
+		System.out.println("read in time："+ 1.0 * (endTime - startTime) / 1000 + "s");
 		while(true){
 			startTime = System.currentTimeMillis();//记录查询开始时间;
 			
@@ -84,32 +84,38 @@ public class BWTCodeLines {
 			if(cutCode.get(0).isEmpty()){
 				sc.setCodes(cutCode.get(1));
 				sc.setId(-1);
-				sc.setName("seed code");
+				sc.setName("back seed code");
 				BWTSearch(sc);
 				//System.out.println("1111111111111111111111111111111111");
 			}else if(cutCode.get(1).isEmpty()){
 				sc.setCodes(cutCode.get(0));
 				sc.setId(-1);
-				sc.setName("seed code");
+				sc.setName("front seed code");
 				BWTSearch(sc);
 				//System.out.println("2222222222222222222222222222222222");
 			}else{
 				SourceCode fsc = new SourceCode();
 				fsc.setCodes(cutCode.get(0));
 				fsc.setId(-1);
-				fsc.setName("seed code");
+				fsc.setName("front seed code");
 				
 				SourceCode bsc = new SourceCode();
 				bsc.setCodes(cutCode.get(1));
 				bsc.setId(-1);
-				bsc.setName("seed code");
+				bsc.setName("back seed code");
 				
 				List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 				for (int i = 0; i < codeSnippets.size(); i++) {
 					SourceCode is = new SourceCode(codeSnippets.get(i));
+					double s1 = getSimilarity(fsc, is);
+					double s2 = getSimilarity(bsc, is);
 					Similarity2ClassIndex s2c = new Similarity2ClassIndex();
 					s2c.setClassId(i);
-					s2c.setSimilarity((0.5 * getSimilarity(fsc, is)) + (0.5 * getSimilarity(bsc, is)));
+					if(Math.abs(s1-s2) < 0.3){
+						s2c.setSimilarity(0.6 * s1 + 0.4 * s2);
+					}else{
+						s2c.setSimilarity(s1 > s2 ? s1 : s2);
+					}
 					simiList.add(s2c);
 
 					FirstLastRow.clear();
@@ -127,7 +133,7 @@ public class BWTCodeLines {
 			}
 
 			endTime=System.currentTimeMillis();//记录查询结束时间;
-			System.out.println("search time："+ (endTime - startTime));
+			System.out.println("search time："+ 1.0 * (endTime - startTime) / 1000 + "s");
 			
 	        @SuppressWarnings("resource")
 			Scanner sb = new Scanner(System.in);  
@@ -163,6 +169,8 @@ public class BWTCodeLines {
 		}
 		int front = (i - 5) >= 0 ? (i - 5) : 0;
 		int back = (i + 5) < code.size() ? (i + 5) : (code.size()-1);
+		
+		//System.out.println(front + " " + back);
 		
 		for(int j = front;j < i;j++){
 			frontCode.add(code.get(j));

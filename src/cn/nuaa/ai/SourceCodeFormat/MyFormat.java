@@ -2,12 +2,21 @@ package cn.nuaa.ai.SourceCodeFormat;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.dom.AST;
@@ -25,7 +34,16 @@ public class MyFormat {
 	public static List<String> VariableDeclarationList = new ArrayList<String>();
 	public static List<String> VariableNameList = new ArrayList<String>();
 	public static List<String> VariableTypeList = new ArrayList<String>();
+	public static Map<String,Integer> TypeMap = new HashMap<String,Integer>();
+	public static MethodDeclarationEntity methodDeclaration = new MethodDeclarationEntity();
 
+	private static final Set<String> BasicTypeSet = new HashSet<String>(){
+		private static final long serialVersionUID = -7711952209080770726L;
+	{add("int");add("long");add("short");add("float");add("double");add("String");add("byte");add("char");add("boolean");
+	add("int[]");add("long[]");add("short[]");add("float[]");add("double[]");add("String[]");add("byte[]");add("char[]");add("boolean[]");}};
+	
+	private static String fileName = "0.txt";
+	
 	public static void main(String[] args) {
 		//codeFormat(
 		//		"public class TestFormatter{public static void main(String[] args){int i = 0;List list = new ArrayList();if(!Sysss.out()){i+=1;i+=1;i--;int j = 10;}System.out.println(\"Hello World\" + i);TextEdit textEdit = codeFormatter.format(CodeFormatter.K_COMPILATION_UNIT, code, 0, code.length(), 0, null);}}");
@@ -39,24 +57,67 @@ public class MyFormat {
 		//removeVariableDeclaration("public class TestFormatter{public static void main(String[] args){int i = 0;List<String> list = new ArrarList<String>();list.add(\"12333\");}}");
 		
 		//从文件中获取源码;并对其进行格式化;
-		String code = codeFormat(addClassHead(readCodeFromFile("F:\\data\\jarFiles\\Top100000N\\methodbody\\1.txt")));
+		String code = codeFormat(addClassHead(readCodeFromFile("F:\\data\\jarFiles\\Top100000N\\methodbody\\0.txt")));
 		//System.out.println(code);
 		//解析代码;获取变量声明信息;
 		SingleFileTest(code);
-		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-		for (String i : VariableDeclarationList) {
-			System.out.print(i);
-		}
+
 		//去掉源码中所有的变量声明;
 		String nCode = removeVariableDeclaration(code);
 		String oCode = nCode;
 		//将变量替换为其原有类型;
 		for(int i = 0;i < VariableTypeList.size();i++){
+			if(BasicTypeSet.contains(VariableTypeList.get(i))){
+				continue;
+			}
 			nCode = oCode.replaceAll(VariableNameList.get(i),VariableTypeList.get(i));
+			oCode = nCode;
 		}
+		//去掉类结构;
+		nCode = removeClassHead(nCode);
+		
+		//信息输出;
+		System.out.println("\nFormat Code:");
 		System.out.println(nCode);
+		
+		System.out.println("\nVariable Declaration:");
+		for (String i : VariableDeclarationList) {
+			System.out.println(i);
+		}
+		
+		System.out.println("\nVariable Type Information:");
+		for(String s : TypeMap.keySet()){
+			System.out.println("type: " + s + "      num: " + TypeMap.get(s));
+		}
+		
+		System.out.println("\nMethod Declaration:");
+		System.out.println("method name: " + methodDeclaration.getMethodName());
+		System.out.println("method return value: " + methodDeclaration.getMethodRetureType());
+		for(String s : methodDeclaration.getMethodParameters()){
+			System.out.println("parameter: " + s);
+		}
+		
+		//存储数据;
+		storeData(nCode);
+		
+		//清理数据;
+		clearData();
+		
+		//读取数据;
+		readData();
 	}
 
+	/**
+	 * 清理数据;
+	 * */
+	private static void clearData(){
+		VariableDeclarationList.clear();
+		VariableNameList.clear();
+		VariableTypeList.clear();
+		TypeMap.clear();
+		methodDeclaration.getMethodParameters().clear();
+	}
+	
 	/**
 	 * 去掉代码段中的所有声明;
 	 * 或者说将声明和方法体分开;
@@ -65,9 +126,12 @@ public class MyFormat {
 		String oCode = code;
 		String nCode = null;
 		for (String i : VariableDeclarationList) {
-			nCode = oCode.replace(i.replace("\n", "").replaceAll("=", " = "), "");
+			nCode = oCode.replace(i, "\n");
 			oCode = nCode;
 		}
+		
+		nCode = oCode.replaceAll(" +\n", "");
+		
 		//System.out.println(nCode);
 		return nCode;
 	}
@@ -133,7 +197,7 @@ public class MyFormat {
 	private static String codeFormat(String code) {
 		CodeFormatter codeFormatter = ToolFactory.createCodeFormatter(null);
 
-		TextEdit textEdit = codeFormatter.format(CodeFormatter.K_COMPILATION_UNIT | CodeFormatter.F_INCLUDE_COMMENTS,
+		TextEdit textEdit = codeFormatter.format(CodeFormatter.K_SINGLE_LINE_COMMENT | CodeFormatter.F_INCLUDE_COMMENTS,
 				code, 0, code.length(), 0, null);
 		IDocument doc = new Document(code);
 		try {
@@ -156,6 +220,14 @@ public class MyFormat {
 		return "public class test{" + code + "}";
 	}
 	
+	/**
+	 * 删除类结构;
+	 * */
+	private static String removeClassHead(String code){
+		//System.out.println("public class test{" + code + "}");
+		String nCode = code.replace("public class test{", "");
+		return nCode.substring(0, nCode.length()-1);
+	}	
 	
 	/**
 	 * 从文件中读取代码;
@@ -193,5 +265,215 @@ public class MyFormat {
 		}
 		//System.out.println(code);
 		return code;
+	}
+	
+	private static void readData(){
+		FileInputStream fis = null;
+		InputStreamReader isr = null;
+		BufferedReader br = null; // 用于包装InputStreamReader,提高处理性能。因为BufferedReader有缓冲的，而InputStreamReader没有。
+		try {
+			String str = "";
+			fis = new FileInputStream("F:\\data\\jarFiles\\Top100000N\\methodVaribleDeclaration\\" + fileName);// FileInputStream
+			// 从文件系统中的某个文件中获取字节
+			isr = new InputStreamReader(fis);// InputStreamReader 是字节流通向字符流的桥梁,
+			br = new BufferedReader(isr);// 从字符输入流中读取文件中的内容,封装了一个new
+											// InputStreamReader的对象
+			while ((str = br.readLine()) != null) {
+				VariableDeclarationList.add(str);
+			}
+		} catch (FileNotFoundException e) {
+			System.out.println("找不到指定文件");
+		} catch (IOException e) {
+			System.out.println("读取文件失败");
+		} finally {
+			try {
+				br.close();
+				isr.close();
+				fis.close();
+				// 关闭的时候最好按照先后顺序关闭最后开的先关闭所以先关s,再关n,最后关m
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		String code = "";
+		try {
+			String str = "";
+			fis = new FileInputStream("F:\\data\\jarFiles\\Top100000N\\methodFormatBody\\" + fileName);// FileInputStream
+			// 从文件系统中的某个文件中获取字节
+			isr = new InputStreamReader(fis);// InputStreamReader 是字节流通向字符流的桥梁,
+			br = new BufferedReader(isr);// 从字符输入流中读取文件中的内容,封装了一个new
+											// InputStreamReader的对象
+			while ((str = br.readLine()) != null) {
+				code += (str + "\n");
+			}
+		} catch (FileNotFoundException e) {
+			System.out.println("找不到指定文件");
+		} catch (IOException e) {
+			System.out.println("读取文件失败");
+		} finally {
+			try {
+				br.close();
+				isr.close();
+				fis.close();
+				// 关闭的时候最好按照先后顺序关闭最后开的先关闭所以先关s,再关n,最后关m
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		try {
+			String str = "";
+			fis = new FileInputStream("F:\\data\\jarFiles\\Top100000N\\methodVaribleDeclarationInformation\\" + fileName);// FileInputStream
+			// 从文件系统中的某个文件中获取字节
+			isr = new InputStreamReader(fis);// InputStreamReader 是字节流通向字符流的桥梁,
+			br = new BufferedReader(isr);// 从字符输入流中读取文件中的内容,封装了一个new
+											// InputStreamReader的对象
+			while ((str = br.readLine()) != null) {
+				String[] strs = str.split(" ");
+				TypeMap.put(strs[0], Integer.parseInt(strs[1]));
+			}
+		} catch (FileNotFoundException e) {
+			System.out.println("找不到指定文件");
+		} catch (IOException e) {
+			System.out.println("读取文件失败");
+		} finally {
+			try {
+				br.close();
+				isr.close();
+				fis.close();
+				// 关闭的时候最好按照先后顺序关闭最后开的先关闭所以先关s,再关n,最后关m
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		
+        File file =new File("F:\\data\\jarFiles\\Top100000N\\methodBasicInformation\\" + fileName);
+        FileInputStream in;
+        try {
+            in = new FileInputStream(file);
+            ObjectInputStream objIn=new ObjectInputStream(in);
+            methodDeclaration = (MethodDeclarationEntity) objIn.readObject();
+            objIn.close();
+            //System.out.println("read object success!");
+        } catch (IOException e) {
+            System.out.println("read object failed");
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        
+        
+		//信息输出;
+		System.out.println("\nFormat Code:");
+		System.out.println(code);
+		
+		System.out.println("\nVariable Declaration:");
+		for (String i : VariableDeclarationList) {
+			System.out.println(i);
+		}
+		
+		System.out.println("\nVariable Type Information:");
+		for(String s : TypeMap.keySet()){
+			System.out.println("type: " + s + "      num: " + TypeMap.get(s));
+		}
+		
+		System.out.println("\nMethod Declaration:");
+		System.out.println("method name: " + methodDeclaration.getMethodName());
+		System.out.println("method return value: " + methodDeclaration.getMethodRetureType());
+		for(String s : methodDeclaration.getMethodParameters()){
+			System.out.println("parameter: " + s);
+		}
+
+	}
+	
+	
+	/**
+	 * 存储解析的数据;
+	 * */
+	private static void storeData(String code){
+		//存储变量声明;
+		StringBuffer str = new StringBuffer();
+		for(int i = 0;i < VariableDeclarationList.size();i++){
+			str.append(VariableDeclarationList.get(i));
+		}
+		try {
+			writeFileContent("F:\\data\\jarFiles\\Top100000N\\methodVaribleDeclaration\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		//存储格式化后的方法体;
+		str = new StringBuffer(code);
+		try {
+			writeFileContent("F:\\data\\jarFiles\\Top100000N\\methodFormatBody\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		//存储变量信息;
+		str = new StringBuffer();
+		for(String s : TypeMap.keySet()){
+			str.append(s + " " + TypeMap.get(s) + "\n");
+		}
+		try {
+			writeFileContent("F:\\data\\jarFiles\\Top100000N\\methodVaribleDeclarationInformation\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		//存储方法信息;
+        File file =new File("F:\\data\\jarFiles\\Top100000N\\methodBasicInformation\\" + fileName);
+        FileOutputStream out;
+        try {
+            out = new FileOutputStream(file);
+            ObjectOutputStream objOut=new ObjectOutputStream(out);
+            objOut.writeObject(methodDeclaration);
+            objOut.flush();
+            objOut.close();
+            System.out.println("write object success!");
+        } catch (IOException e) {
+            System.out.println("write object failed");
+            e.printStackTrace();
+        }
+	}
+	
+	/**
+	 * 写入文件;
+	 * */
+	private static boolean writeFileContent(String filepath, StringBuffer buffer) throws IOException {
+		Boolean bool = false;
+		FileInputStream fis = null;
+		InputStreamReader isr = null;
+		BufferedReader br = null;
+		FileOutputStream fos = null;
+		PrintWriter pw = null;
+		try {
+			File file = new File(filepath);// 文件路径(包括文件名称)
+
+			fos = new FileOutputStream(file);
+			pw = new PrintWriter(fos);
+			pw.write(buffer.toString().toCharArray());
+			pw.flush();
+			bool = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			// 不要忘记关闭
+			if (pw != null) {
+				pw.close();
+			}
+			if (fos != null) {
+				fos.close();
+			}
+			if (br != null) {
+				br.close();
+			}
+			if (isr != null) {
+				isr.close();
+			}
+			if (fis != null) {
+				fis.close();
+			}
+		}
+		return bool;
 	}
 }

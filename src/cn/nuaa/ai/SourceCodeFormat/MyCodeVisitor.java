@@ -1,5 +1,6 @@
 package cn.nuaa.ai.SourceCodeFormat;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -20,11 +21,20 @@ public class MyCodeVisitor extends ASTVisitor {
 
 	@SuppressWarnings("unchecked")
 	public boolean visit(MethodDeclaration node) {
-		//System.out.println("MethodDeclaration - Method name: " + node.getName());// 得到方法名
+		System.out.println("MethodDeclaration - Method name: " + node.getName());// 得到方法名
 		//System.out.println("MethodDeclaration - the character length of the method is:" + node.getLength());// 节点的长度，不过是以字符长度来计算的，不是以行数来计//算的
-		//System.out.println("MethodDeclaration - Parameter list of Method:\t" + node.parameters());// 得到方法的参数列表
-		//System.out.println("MethodDeclaration - Return Value of Method:\t" + node.getReturnType2());// 得到方法的返回值
+		System.out.println("MethodDeclaration - Parameter list of Method:\t" + node.parameters());// 得到方法的参数列表
+		System.out.println("MethodDeclaration - Return Value of Method:\t" + node.getReturnType2());// 得到方法的返回值
 
+		MyFormat.methodDeclaration.setMethodName(node.getName().toString());
+		MyFormat.methodDeclaration.setMethodRetureType(node.getReturnType2().toString());
+		List<String> plist = new ArrayList<>();
+		for(int i = 0;i < node.parameters().size();i++){
+			plist.add(node.parameters().get(i).toString());
+		}
+		MyFormat.methodDeclaration.setMethodParameters(plist);
+		
+		
 		System.out.println("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 		Block b = node.getBody();
 		// System.out.println(b.statements());
@@ -69,9 +79,17 @@ public class MyCodeVisitor extends ASTVisitor {
 				System.out.println("get variable value: " + vdf.getInitializer());
 				System.out.println();
 				
-				MyFormat.VariableDeclarationList.add(list.get(i).toString());
+		    	MyFormat.VariableDeclarationList.add(list.get(i).toString());
 				MyFormat.VariableNameList.add(vdf.getName().toString());
 				MyFormat.VariableTypeList.add(ifs.getType().toString());
+				
+				if(MyFormat.TypeMap.containsKey(ifs.getType().toString())){
+					MyFormat.TypeMap.replace(ifs.getType().toString(), MyFormat.TypeMap.get(ifs.getType().toString()) + 1);
+				}else{
+					MyFormat.TypeMap.put(ifs.getType().toString(), 1);
+				}
+				
+				
 			}
 			// 读取表达式;
 			else if (list.get(i).getClass().getSimpleName().equals("ExpressionStatement")) {
