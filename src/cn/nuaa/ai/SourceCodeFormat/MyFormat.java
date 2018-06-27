@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -44,6 +45,8 @@ public class MyFormat {
 	add("int[]");add("long[]");add("short[]");add("float[]");add("double[]");add("String[]");add("byte[]");add("char[]");add("boolean[]");}};
 	
 	private static String fileName = "0.txt";
+	private static String filePath= "F:\\data\\jarFiles\\Top100000N\\methodbody\\";
+	
 	
 	public static void main(String[] args) {
 		//codeFormat(
@@ -57,6 +60,8 @@ public class MyFormat {
 		//}
 		//removeVariableDeclaration("public class TestFormatter{public static void main(String[] args){int i = 0;List<String> list = new ArrarList<String>();list.add(\"12333\");}}");
 		
+		
+		/*
 		//从文件中获取源码;并对其进行格式化;
 		String code = codeFormat(addClassHead(readCodeFromFile("F:\\data\\jarFiles\\Top100000N\\methodbody\\0.txt")));
 		//System.out.println(code);
@@ -72,10 +77,6 @@ public class MyFormat {
 		//去掉类结构;
 		nCode = removeClassHead(nCode);
 		oCode = nCode;
-		
-		//在格式化一次代码;去掉空行;
-		nCode = codeFormat(oCode);
-		
 		
 		//信息输出;
 		System.out.println("Format Code:");
@@ -106,8 +107,57 @@ public class MyFormat {
 		
 		//读取数据;
 		readData();
+		*/
+		
+		formatCode();
 	}
 
+	public static void formatCode(){
+		File directory = new File(filePath);
+		File[] insFiles = directory.listFiles();
+		int count = 0;
+		for(int i = 0;i < insFiles.length;i++){
+			fileName = insFiles[i].getName();
+			System.out.println(fileName);
+			//从文件中获取源码;并对其进行格式化;
+			String code = codeFormat(addClassHead(readCodeFromFile("F:\\data\\jarFiles\\Top100000N\\methodbody\\" + fileName)));
+			
+			if(code.contains(" abstract ")){
+				count ++;
+				continue;
+			}
+			
+			
+			//System.out.println(code);
+			//解析代码;获取变量声明信息;
+			SingleFileTest(code);
+
+			//去掉源码中所有的变量声明;
+			String nCode = removeVariableDeclaration(code);
+			String oCode = nCode;
+			
+			//将变量替换为其原有类型;
+			nCode = replaceVariableName(oCode);
+			oCode = nCode;
+			
+			//去掉类结构;
+			nCode = removeClassHead(nCode);
+			oCode = nCode;
+			
+			//存储数据;
+			storeData(nCode);
+			
+			//清理数据;
+			clearData();
+			
+			if(i > 100000)
+				break;
+		}
+		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + count);
+	}
+	
+	
+	
 	/**
 	 * 清理数据;
 	 * */
@@ -142,7 +192,7 @@ public class MyFormat {
 	 * 将代码段中的变量替换为其原有类型;
 	 * */
 	private static String replaceVariableName(String code){
-		String nCode = null;
+		String nCode = code;
 		String oCode = code;
 		for(int i = 0;i < VariableTypeList.size();i++){
 			if(BasicTypeSet.contains(VariableTypeList.get(i))){
@@ -160,24 +210,29 @@ public class MyFormat {
 			oCode = nCode;
 			nCode = oCode.replaceAll(VariableNameList.get(i) + ";",VariableTypeList.get(i) + ";");
 			oCode = nCode;
+			nCode = oCode.replaceAll(VariableNameList.get(i) + "\\)",VariableTypeList.get(i) + ")");
+			oCode = nCode;
 		}
 		
 		for(int i = 0;i < methodDeclaration.getMethodParameters().size();i++){
 			String[] types = methodDeclaration.getMethodParameters().get(i).split(" ");
-			if(BasicTypeSet.contains(types[0])){
+			int f = types.length - 2;
+			int e = types.length - 1;
+			if(BasicTypeSet.contains(types[f])){
 				continue;
 			}
 			
 			//nCode = oCode.replaceAll(VariableNameList.get(i),VariableTypeList.get(i));
 			//oCode = nCode;
-			
-			nCode = oCode.replaceAll(types[1] + " ",types[0] + " ");
+			nCode = oCode.replaceAll(types[e] + " ",types[f] + " ");
 			oCode = nCode;
-			nCode = oCode.replaceAll(types[1] + "\\.",types[0] + "\\.");
+			nCode = oCode.replaceAll(types[e] + "\\.",types[f] + "\\.");
 			oCode = nCode;
-			nCode = oCode.replaceAll(types[1] + ",",types[0] + ",");
+			nCode = oCode.replaceAll(types[e] + ",",types[f] + ",");
 			oCode = nCode;
-			nCode = oCode.replaceAll(types[1] + ";",types[0] + ";");
+			nCode = oCode.replaceAll(types[e] + ";",types[f] + ";");
+			oCode = nCode;
+			nCode = oCode.replaceAll(types[e] + "\\)",types[f] + "\\)");
 			oCode = nCode;
 		}
 		
@@ -245,6 +300,10 @@ public class MyFormat {
 	private static String codeFormat(String code) {
 		@SuppressWarnings("unchecked")
 		Map<String, String> options = DefaultCodeFormatterConstants.getEclipseDefaultSettings();
+		//读取配置;
+		options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_7);
+		options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_7);
+		options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_7);
 		//一行多少个字符后会换行;
 		options.replace("org.eclipse.jdt.core.formatter.lineSplit", "2000");
 		//制表符;
@@ -266,7 +325,7 @@ public class MyFormat {
 			e.printStackTrace();
 		}
 		//System.out.println(doc.get());
-		return doc.get().replaceAll("\t", "    ");
+		return doc.get();
 	}
 	
 	/**
@@ -282,6 +341,7 @@ public class MyFormat {
 	 * */
 	private static String removeClassHead(String code){
 		//System.out.println("public class test{" + code + "}");
+		//System.out.println(code);
 		String nCode = code.replace("public class test {", "");
 		return nCode.substring(0, nCode.length()-1);
 	}	
@@ -307,7 +367,7 @@ public class MyFormat {
 				if(str == null || str.equals("\n") || str.equals("")){
 					continue;
 				}
-				code += (str.replaceAll("\\<.*?\\>", ""));
+				code += (str);
 			}
 		} catch (FileNotFoundException e) {
 			System.out.println("找不到指定文件");
@@ -462,7 +522,9 @@ public class MyFormat {
 			str.append(VariableDeclarationList.get(i));
 		}
 		try {
-			writeFileContent("F:\\data\\jarFiles\\Top100000N\\methodVaribleDeclaration\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
+			if(str.length() > 1){
+				writeFileContent("F:\\data\\jarFiles\\Top100000N\\methodVaribleDeclaration\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -479,7 +541,9 @@ public class MyFormat {
 			str.append(s + " " + TypeMap.get(s) + "\n");
 		}
 		try {
-			writeFileContent("F:\\data\\jarFiles\\Top100000N\\methodVaribleDeclarationInformation\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
+			if(str.length() > 1){
+				writeFileContent("F:\\data\\jarFiles\\Top100000N\\methodVaribleDeclarationInformation\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -492,7 +556,7 @@ public class MyFormat {
             objOut.writeObject(methodDeclaration);
             objOut.flush();
             objOut.close();
-            System.out.println("write object success!");
+            //System.out.println("write object success!");
         } catch (IOException e) {
             System.out.println("write object failed");
             e.printStackTrace();

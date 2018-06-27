@@ -27,7 +27,11 @@ public class MyCodeVisitor2 extends ASTVisitor {
 		//System.out.println("MethodDeclaration - Return Value of Method:\t" + node.getReturnType2());// 得到方法的返回值
 
 		MyFormat.methodDeclaration.setMethodName(node.getName().toString());
-		MyFormat.methodDeclaration.setMethodRetureType(node.getReturnType2().toString());
+		if(node.getReturnType2() == null){
+			MyFormat.methodDeclaration.setMethodRetureType("void");
+		}else{
+			MyFormat.methodDeclaration.setMethodRetureType(node.getReturnType2().toString());
+		}
 		List<String> plist = new ArrayList<>();
 		for(int i = 0;i < node.parameters().size();i++){
 			plist.add(node.parameters().get(i).toString());
