@@ -23,6 +23,7 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
+import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -66,18 +67,18 @@ public class MyFormat {
 		String nCode = removeVariableDeclaration(code);
 		String oCode = nCode;
 		//将变量替换为其原有类型;
-		for(int i = 0;i < VariableTypeList.size();i++){
-			if(BasicTypeSet.contains(VariableTypeList.get(i))){
-				continue;
-			}
-			nCode = oCode.replaceAll(VariableNameList.get(i),VariableTypeList.get(i));
-			oCode = nCode;
-		}
+		nCode = replaceVariableName(oCode);
+		oCode = nCode;
 		//去掉类结构;
 		nCode = removeClassHead(nCode);
+		oCode = nCode;
+		
+		//在格式化一次代码;去掉空行;
+		nCode = codeFormat(oCode);
+		
 		
 		//信息输出;
-		System.out.println("\nFormat Code:");
+		System.out.println("Format Code:");
 		System.out.println(nCode);
 		
 		System.out.println("\nVariable Declaration:");
@@ -126,7 +127,7 @@ public class MyFormat {
 		String oCode = code;
 		String nCode = null;
 		for (String i : VariableDeclarationList) {
-			nCode = oCode.replace(i, "\n");
+			nCode = oCode.replace((i.replace("=", " = ").replace("\n", "")), "\n");
 			oCode = nCode;
 		}
 		
@@ -138,6 +139,53 @@ public class MyFormat {
 	
 	
 	/**
+	 * 将代码段中的变量替换为其原有类型;
+	 * */
+	private static String replaceVariableName(String code){
+		String nCode = null;
+		String oCode = code;
+		for(int i = 0;i < VariableTypeList.size();i++){
+			if(BasicTypeSet.contains(VariableTypeList.get(i))){
+				continue;
+			}
+			
+			//nCode = oCode.replaceAll(VariableNameList.get(i),VariableTypeList.get(i));
+			//oCode = nCode;
+			
+			nCode = oCode.replaceAll(VariableNameList.get(i) + " ",VariableTypeList.get(i) + " ");
+			oCode = nCode;
+			nCode = oCode.replaceAll(VariableNameList.get(i) + "\\.",VariableTypeList.get(i) + "\\.");
+			oCode = nCode;
+			nCode = oCode.replaceAll(VariableNameList.get(i) + ",",VariableTypeList.get(i) + ",");
+			oCode = nCode;
+			nCode = oCode.replaceAll(VariableNameList.get(i) + ";",VariableTypeList.get(i) + ";");
+			oCode = nCode;
+		}
+		
+		for(int i = 0;i < methodDeclaration.getMethodParameters().size();i++){
+			String[] types = methodDeclaration.getMethodParameters().get(i).split(" ");
+			if(BasicTypeSet.contains(types[0])){
+				continue;
+			}
+			
+			//nCode = oCode.replaceAll(VariableNameList.get(i),VariableTypeList.get(i));
+			//oCode = nCode;
+			
+			nCode = oCode.replaceAll(types[1] + " ",types[0] + " ");
+			oCode = nCode;
+			nCode = oCode.replaceAll(types[1] + "\\.",types[0] + "\\.");
+			oCode = nCode;
+			nCode = oCode.replaceAll(types[1] + ",",types[0] + ",");
+			oCode = nCode;
+			nCode = oCode.replaceAll(types[1] + ";",types[0] + ";");
+			oCode = nCode;
+		}
+		
+		
+		return nCode;
+	}
+	
+	/**
 	 * 解析代码; 现在需要将带解析的方法体包含在一个类的结构里面;
 	 */
 	private static void SingleFileTest(String code) {
@@ -145,7 +193,7 @@ public class MyFormat {
 				//"public class TestFormatter{public static void main(String[] args){int i = 0;List<String> list = new ArrarList<String>();list.add(\"12333\");if(!Sysss.out()){i+=1;i+=1;i--;int j = 10;}System.out.println(\"Hello World\" + i);TextEdit textEdit = codeFormatter.format(CodeFormatter.K_COMPILATION_UNIT, code, 0, code.length(), 0, null);}}");
 				//"public class TestFormatter{public static void main(String[] args){List<String> list = new ArrarList<String>();list.add(\"12333\");}}"
 				code);
-		MyCodeVisitor visitor = new MyCodeVisitor();
+		MyCodeVisitor2 visitor = new MyCodeVisitor2();
 		comp.accept(visitor);
 		// 获取import数据;
 		// System.out.println(comp.imports());
@@ -195,7 +243,17 @@ public class MyFormat {
 	 * 格式化源代码;
 	 */
 	private static String codeFormat(String code) {
-		CodeFormatter codeFormatter = ToolFactory.createCodeFormatter(null);
+		@SuppressWarnings("unchecked")
+		Map<String, String> options = DefaultCodeFormatterConstants.getEclipseDefaultSettings();
+		//一行多少个字符后会换行;
+		options.replace("org.eclipse.jdt.core.formatter.lineSplit", "2000");
+		//制表符;
+		options.replace("org.eclipse.jdt.core.formatter.tabulation.char", "space");
+		//去除空行;
+		options.replace("org.eclipse.jdt.core.formatter.comment.clear_blank_lines_in_block_comment", "true");
+		options.replace("org.eclipse.jdt.core.formatter.comment.clear_blank_lines_in_javadoc_comment  ", "true");
+		
+		CodeFormatter codeFormatter = ToolFactory.createCodeFormatter(options);
 		TextEdit textEdit = codeFormatter.format(CodeFormatter.F_INCLUDE_COMMENTS,
 				code, 0, code.length(), 0, null);
 		IDocument doc = new Document(code);
@@ -246,7 +304,10 @@ public class MyFormat {
 			while ((str = br.readLine()) != null) {
 				//因为Format方法不能处理List<String> list = new ArrarList<String>(); 中的<String>这种写法;
 				//因此在这里去掉这部分内容;
-				code += (str.replaceAll("\\<.*?\\>", "") + "\n");
+				if(str == null || str.equals("\n") || str.equals("")){
+					continue;
+				}
+				code += (str.replaceAll("\\<.*?\\>", ""));
 			}
 		} catch (FileNotFoundException e) {
 			System.out.println("找不到指定文件");
@@ -304,6 +365,9 @@ public class MyFormat {
 			br = new BufferedReader(isr);// 从字符输入流中读取文件中的内容,封装了一个new
 											// InputStreamReader的对象
 			while ((str = br.readLine()) != null) {
+				if(str == null || str.equals("\n") || str.equals("")){
+					continue;
+				}
 				code += (str + "\n");
 			}
 		} catch (FileNotFoundException e) {
@@ -405,7 +469,7 @@ public class MyFormat {
 		//存储格式化后的方法体;
 		str = new StringBuffer(code);
 		try {
-			writeFileContent("F:\\data\\jarFiles\\Top100000N\\methodFormatBody\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
+			writeFileContent("F:\\data\\jarFiles\\Top100000N\\methodFormatBody\\" + fileName,new StringBuffer(str));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

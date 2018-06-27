@@ -55,6 +55,8 @@ public class Test {
 		// change the option to wrap each enum constant on a new line
 		//options.replace("org.eclipse.jdt.core.formatter.comment.line_length", "2000");
 		options.replace("org.eclipse.jdt.core.formatter.lineSplit", "2000");
+		//options.replace("org.eclipse.jdt.core.formatter.indentation.size", "8");
+		options.replace("org.eclipse.jdt.core.formatter.tabulation.char", "space");
 
 		
 		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -67,7 +69,7 @@ public class Test {
 		final CodeFormatter codeFormatter = ToolFactory.createCodeFormatter(options);
 
 		// retrieve the source to format
-		String source = "public class TestFormatter{public static void main(String[] args){int i = 0;List list = new ArrarList().dsadsa().dasdsadasdas().dasdasdasdsa().dasdasdasdasdasdsad().dasdasdasdasdas();list.add(\"12333\");if(i==0){i++;j++;asdasdas.asdhgd().dasdas();}}}";
+		String source = "public class TestFormatter{public static void main(String[] args){int i = 0;List list = new ArrarList(dasdasdsadasdas).dsadsa().dasdsadasdas().dasdasdasdsa().dasdasdasdasdasdsad().dasdasdasdasdas();list.add(\"12333\");if(i==0){i++;j++;asdasdas.asdhgd().dasdas();}}}";
 
 		TextEdit edit = codeFormatter.format(CodeFormatter.F_INCLUDE_COMMENTS, source, 0, source.length(), 0, null);
 
@@ -83,6 +85,27 @@ public class Test {
 
 		// display the formatted string on the System out
 		System.out.println(doc.get());
+		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!");
+		
+		
+		
+		// retrieve the source to format
+		String source1 = "public class TestFormatter{public static void main(String[] args){int i = 0;List list = new ArrarList(dasdasdsadasdas).dsadsa().dasdsadasdas().dasdasdasdsa().dasdasdasdasdasdsad().dasdasdasdasdas();list.add(\"12333\");if(i==0){i++;j++;asdasdas.asdhgd().dasdas();}}}";
+
+		TextEdit edit1 = codeFormatter.format(CodeFormatter.F_INCLUDE_COMMENTS, source1, 0, source1.length(), 0, null);
+
+		IDocument doc1 = new Document(source1);
+		try {
+			edit1.apply(doc1);
+			// System.out.println(doc.get());
+		} catch (MalformedTreeException e) {
+			e.printStackTrace();
+		} catch (BadLocationException e) {
+			e.printStackTrace();
+		}
+
+		// display the formatted string on the System out
+		System.out.println(doc1.get());
 		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!");
 	}
 }
