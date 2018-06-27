@@ -196,8 +196,7 @@ public class MyFormat {
 	 */
 	private static String codeFormat(String code) {
 		CodeFormatter codeFormatter = ToolFactory.createCodeFormatter(null);
-
-		TextEdit textEdit = codeFormatter.format(CodeFormatter.K_SINGLE_LINE_COMMENT | CodeFormatter.F_INCLUDE_COMMENTS,
+		TextEdit textEdit = codeFormatter.format(CodeFormatter.F_INCLUDE_COMMENTS,
 				code, 0, code.length(), 0, null);
 		IDocument doc = new Document(code);
 		try {
@@ -209,7 +208,7 @@ public class MyFormat {
 			e.printStackTrace();
 		}
 		//System.out.println(doc.get());
-		return doc.get();
+		return doc.get().replaceAll("\t", "    ");
 	}
 	
 	/**
@@ -225,7 +224,7 @@ public class MyFormat {
 	 * */
 	private static String removeClassHead(String code){
 		//System.out.println("public class test{" + code + "}");
-		String nCode = code.replace("public class test{", "");
+		String nCode = code.replace("public class test {", "");
 		return nCode.substring(0, nCode.length()-1);
 	}	
 	
