@@ -121,7 +121,7 @@ public class MyCodeVisitor extends ASTVisitor {
 		}
 
 		// »ñÈ¡×¢ÊÍ;
-		//System.out.println("annotation: " + node.getJavadoc());
+		System.out.println("annotation: " + node.getJavadoc());
 
 		System.out.println("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 		return true;

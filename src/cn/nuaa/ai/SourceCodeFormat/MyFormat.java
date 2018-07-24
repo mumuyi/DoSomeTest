@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -45,7 +46,7 @@ public class MyFormat {
 	add("int[]");add("long[]");add("short[]");add("float[]");add("double[]");add("String[]");add("byte[]");add("char[]");add("boolean[]");}};
 	
 	private static String fileName = "0.txt";
-	private static String filePath= "F:\\data\\jarFiles\\Top100000N\\methodbody\\";
+	private static String filePath= "F:\\data\\github\\methodbody\\";
 	
 	
 	public static void main(String[] args) {
@@ -63,7 +64,8 @@ public class MyFormat {
 		
 		/*
 		//从文件中获取源码;并对其进行格式化;
-		String code = codeFormat(addClassHead(readCodeFromFile("F:\\data\\jarFiles\\Top100000N\\methodbody\\0.txt")));
+		String code = codeFormat(addClassHead(readCodeFromFile("C:\\Users\\ai\\Desktop\\1.txt")));
+		//String code = addClassHead(readCodeFromFile("F:\\data\\jarFiles\\Top100000N\\methodbody\\0.txt"));
 		//System.out.println(code);
 		//解析代码;获取变量声明信息;
 		SingleFileTest(code);
@@ -100,27 +102,29 @@ public class MyFormat {
 		}
 		
 		//存储数据;
-		storeData(nCode);
+		//storeData(nCode);
 		
 		//清理数据;
-		clearData();
+		//clearData();
 		
 		//读取数据;
-		readData();
+		//readData();
 		*/
 		
-		formatCode();
+		//formatCode();
+		
+		removeSpaceLine();
 	}
 
 	public static void formatCode(){
 		File directory = new File(filePath);
 		File[] insFiles = directory.listFiles();
 		int count = 0;
-		for(int i = 0;i < insFiles.length;i++){
+		for(int i = 100000;i < insFiles.length;i++){
 			fileName = insFiles[i].getName();
 			System.out.println(fileName);
 			//从文件中获取源码;并对其进行格式化;
-			String code = codeFormat(addClassHead(readCodeFromFile("F:\\data\\jarFiles\\Top100000N\\methodbody\\" + fileName)));
+			String code = codeFormat(addClassHead(readCodeFromFile("F:\\data\\github\\methodbody\\" + fileName)));
 			
 			if(code.contains(" abstract ")){
 				count ++;
@@ -150,7 +154,7 @@ public class MyFormat {
 			//清理数据;
 			clearData();
 			
-			if(i > 100000)
+			if(i > 100200)
 				break;
 		}
 		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + count);
@@ -523,7 +527,7 @@ public class MyFormat {
 		}
 		try {
 			if(str.length() > 1){
-				writeFileContent("F:\\data\\jarFiles\\Top100000N\\methodVaribleDeclaration\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
+				writeFileContent("F:\\data\\github\\methodVaribleDeclaration\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -531,7 +535,7 @@ public class MyFormat {
 		//存储格式化后的方法体;
 		str = new StringBuffer(code);
 		try {
-			writeFileContent("F:\\data\\jarFiles\\Top100000N\\methodFormatBody\\" + fileName,new StringBuffer(str));
+			writeFileContent("F:\\data\\github\\methodFormatBody\\" + fileName,new StringBuffer(str));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -542,13 +546,13 @@ public class MyFormat {
 		}
 		try {
 			if(str.length() > 1){
-				writeFileContent("F:\\data\\jarFiles\\Top100000N\\methodVaribleDeclarationInformation\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
+				writeFileContent("F:\\data\\github\\methodVaribleDeclarationInformation\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		//存储方法信息;
-        File file =new File("F:\\data\\jarFiles\\Top100000N\\methodBasicInformation\\" + fileName);
+        File file =new File("F:\\data\\github\\methodBasicInformation\\" + fileName);
         FileOutputStream out;
         try {
             out = new FileOutputStream(file);
@@ -602,5 +606,49 @@ public class MyFormat {
 			}
 		}
 		return bool;
+	}
+	
+	/**
+	 * 去掉代码中的空白行;
+	 * */
+	public static void removeSpaceLine(){
+		File directory = new File("F:\\data\\github\\methodFormatBody\\");
+		File[] insFiles = directory.listFiles();
+		System.out.println(insFiles.length);
+		int line = 0;
+		StringBuffer strbuf = new StringBuffer();
+		for(int i = 0;i < 1;i++){
+			
+			String str = "";
+			fileName = insFiles[i].getName();
+			try {
+				FileReader fr = new FileReader("F:\\data\\github\\methodFormatBody\\" + fileName);
+				BufferedReader br = new BufferedReader(fr);
+				System.out.println(fileName);
+				while ((str = br.readLine()) != null) {
+					if(str != null && !str.equals("")){
+						if(str.startsWith(" ")){
+							strbuf.append(str);
+							strbuf.append("\n");
+							line++;
+						}
+					}
+				}
+				fr.close();
+				br.close();
+
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+			}
+		}
+		System.out.println(line);
+		System.out.println(strbuf.toString());
+		strbuf.deleteCharAt(strbuf.length()-1);
+		try {
+			writeFileContent("C:\\Users\\ai\\Desktop\\1.txt",strbuf);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

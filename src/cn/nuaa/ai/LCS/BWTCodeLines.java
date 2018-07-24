@@ -4,8 +4,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,7 +21,8 @@ public class BWTCodeLines {
 	private static List<SourceCode> codeSnippets = new ArrayList<SourceCode>();
 	private static List<List<TokenList>> FirstLastRow = new ArrayList<List<TokenList>>();
 	private static File[] insFiles;
-
+	private static Map<String,Map<String,Double>> seeds = new HashMap<String,Map<String,Double>>();
+	
 	public static void main(String[] args) {
 
 		//readCode("F:\\data\\jarFiles\\Top100000N\\methodbody\\");
@@ -44,8 +47,9 @@ public class BWTCodeLines {
 
 		//BWTSearch(codeSnippets.get(0));
 
-		runningDemo();
+		//runningDemo();
 		
+		runningDemo2();
 		
 		// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		// List<TokenList> ltl = FirstLastRow.get(1);
@@ -66,14 +70,14 @@ public class BWTCodeLines {
 	 * */
 	public static void runningDemo(){
 		long startTime = System.currentTimeMillis();//记录读取数据开始时间;
-		readCode("F:\\data\\jarFiles\\Top100000N\\methodbody\\");
+		readCode("F:\\data\\github\\methodFormatBody\\");
 		System.out.println("read in process finished");
 		long endTime=System.currentTimeMillis();//记录读取数据结束时间;
 		System.out.println("read in time："+ 1.0 * (endTime - startTime) / 1000 + "s");
 		while(true){
 			startTime = System.currentTimeMillis();//记录查询开始时间;
 			
-			List<TokenList> linecode = readCodeFromFile("F:\\data\\jarFiles\\Top100000N\\methodbody\\0.txt");
+			List<TokenList> linecode = readCodeFromFile("F:\\data\\github\\methodFormatBody\\1.txt");
 			SourceCode sc = new SourceCode();
 
 			
@@ -107,8 +111,8 @@ public class BWTCodeLines {
 				List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 				for (int i = 0; i < codeSnippets.size(); i++) {
 					SourceCode is = new SourceCode(codeSnippets.get(i));
-					double s1 = getSimilarity(fsc, is);
-					double s2 = getSimilarity(bsc, is);
+					double s1 = getSimilarity(new SourceCode(fsc), is);
+					double s2 = getSimilarity(new SourceCode(bsc), is);
 					Similarity2ClassIndex s2c = new Similarity2ClassIndex();
 					s2c.setClassId(i);
 					if(Math.abs(s1-s2) < 0.3){
@@ -146,6 +150,92 @@ public class BWTCodeLines {
 	        }
 		}
 	}
+	
+	/**
+	 * 运行demo2;
+	 * */
+	public static void runningDemo2(){
+		long startTime = System.currentTimeMillis();//记录读取数据开始时间;
+		readCode("F:\\data\\github\\methodFormatBody\\");
+		System.out.println("read in process finished");
+		long endTime=System.currentTimeMillis();//记录读取数据结束时间;
+		System.out.println("read in time："+ 1.0 * (endTime - startTime) / 1000 + "s");
+		for(int counter = 1200;counter < 1500;counter++){
+			List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
+			List<TokenList> linecode = readCodeFromFile("F:\\data\\github\\methodFormatBody\\" + insFiles[counter].getName());
+			SourceCode sc = new SourceCode();
+			
+			List<List<TokenList>> cutCode = SourceCodeCutting(linecode);
+			if(cutCode.get(0).isEmpty() && cutCode.get(1).isEmpty()){
+				System.out.println("Seed code format error");
+			}
+			if(cutCode.get(0).isEmpty()){
+				sc.setCodes(cutCode.get(1));
+				sc.setId(-1);
+				sc.setName("back seed code");
+				simiList = BWTSearch2(sc);
+				//System.out.println("1111111111111111111111111111111111");
+			}else if(cutCode.get(1).isEmpty()){
+				sc.setCodes(cutCode.get(0));
+				sc.setId(-1);
+				sc.setName("front seed code");
+				simiList = BWTSearch2(sc);
+				//System.out.println("2222222222222222222222222222222222");
+			}else{
+				SourceCode fsc = new SourceCode();
+				fsc.setCodes(cutCode.get(0));
+				fsc.setId(-1);
+				fsc.setName("front seed code");
+				
+				SourceCode bsc = new SourceCode();
+				bsc.setCodes(cutCode.get(1));
+				bsc.setId(-1);
+				bsc.setName("back seed code");
+				
+				
+				for (int i = 0; i < codeSnippets.size(); i++) {
+					SourceCode is = new SourceCode(codeSnippets.get(i));
+					double s1 = getSimilarity(new SourceCode(fsc), is);
+					double s2 = getSimilarity(new SourceCode(bsc), is);
+					Similarity2ClassIndex s2c = new Similarity2ClassIndex();
+					s2c.setClassId(i);
+					if(Math.abs(s1-s2) < 0.3){
+						s2c.setSimilarity(0.6 * s1 + 0.4 * s2);
+					}else{
+						s2c.setSimilarity(s1 > s2 ? s1 : s2);
+					}
+					simiList.add(s2c);
+
+					FirstLastRow.clear();
+				}
+				Collections.sort(simiList);
+			}
+
+			if(simiList.get(5).getSimilarity() > 0.7){
+				Map<String,Double> simi = new HashMap<String,Double>();
+				for(int i = 0;i < 6;i++){
+					Similarity2ClassIndex s2c = simiList.get(i);
+					simi.put(insFiles[s2c.getClassId()].getName(), s2c.getSimilarity());
+				}
+				seeds.put(insFiles[counter].getName(), simi);
+			}
+			
+			System.out.println(seeds.size());
+		}
+		for(String s : seeds.keySet()){
+			String str = "";
+			for(String i : seeds.get(s).keySet()){
+				str += (i + " " + seeds.get(s).get(i));
+				str += "\n";
+			}
+			try {
+				writeFileContent("F:\\data\\github\\seeds\\" + s + ".txt", new StringBuffer(str.substring(0,str.length()-1)));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	
 	/**
 	 * 对需要查询的代码进行切割;
@@ -211,6 +301,24 @@ public class BWTCodeLines {
 		}
 	}
 
+	/**
+	 * 在计算的过程中计算LC;
+	 */
+	public static List<Similarity2ClassIndex> BWTSearch2(SourceCode seed) {
+		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
+		for (int i = 0; i < codeSnippets.size(); i++) {
+			SourceCode is = new SourceCode(codeSnippets.get(i));
+			Similarity2ClassIndex s2c = new Similarity2ClassIndex();
+			s2c.setClassId(i);
+			s2c.setSimilarity(getSimilarity(seed, is));
+			simiList.add(s2c);
+
+			FirstLastRow.clear();
+		}
+		Collections.sort(simiList);
+		return simiList;
+	}
+	
 	/**
 	 * 通过第一种方法来计算两个InstructionSequence 之间的相似度; 即在计算的过程中来计算LC Sequence;
 	 */
@@ -677,5 +785,46 @@ public class BWTCodeLines {
 		list.removeAll(removeList);
 		list.addAll(addList);
 		return list;
+	}
+	
+	/**
+	 * 写入文件;
+	 * */
+	private static boolean writeFileContent(String filepath, StringBuffer buffer) throws IOException {
+		Boolean bool = false;
+		FileInputStream fis = null;
+		InputStreamReader isr = null;
+		BufferedReader br = null;
+		FileOutputStream fos = null;
+		PrintWriter pw = null;
+		try {
+			File file = new File(filepath);// 文件路径(包括文件名称)
+
+			fos = new FileOutputStream(file);
+			pw = new PrintWriter(fos);
+			pw.write(buffer.toString().toCharArray());
+			pw.flush();
+			bool = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			// 不要忘记关闭
+			if (pw != null) {
+				pw.close();
+			}
+			if (fos != null) {
+				fos.close();
+			}
+			if (br != null) {
+				br.close();
+			}
+			if (isr != null) {
+				isr.close();
+			}
+			if (fis != null) {
+				fis.close();
+			}
+		}
+		return bool;
 	}
 }
