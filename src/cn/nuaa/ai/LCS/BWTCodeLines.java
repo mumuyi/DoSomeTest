@@ -160,7 +160,8 @@ public class BWTCodeLines {
 		System.out.println("read in process finished");
 		long endTime=System.currentTimeMillis();//记录读取数据结束时间;
 		System.out.println("read in time："+ 1.0 * (endTime - startTime) / 1000 + "s");
-		for(int counter = 1200;counter < 1500;counter++){
+		int seednum = 0;
+		for(int counter = 10000;counter < 20000;counter++){
 			List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 			List<TokenList> linecode = readCodeFromFile("F:\\data\\github\\methodFormatBody\\" + insFiles[counter].getName());
 			SourceCode sc = new SourceCode();
@@ -211,17 +212,24 @@ public class BWTCodeLines {
 				Collections.sort(simiList);
 			}
 
-			if(simiList.get(5).getSimilarity() > 0.7){
-				Map<String,Double> simi = new HashMap<String,Double>();
+			if(simiList.get(5).getSimilarity() >= 0.9){
+				String str = "";
 				for(int i = 0;i < 6;i++){
 					Similarity2ClassIndex s2c = simiList.get(i);
-					simi.put(insFiles[s2c.getClassId()].getName(), s2c.getSimilarity());
+					str += (insFiles[s2c.getClassId()].getName() + " " + s2c.getSimilarity());
+					str += "\n";
 				}
-				seeds.put(insFiles[counter].getName(), simi);
+				try {
+					writeFileContent("F:\\data\\github\\seeds4\\" + insFiles[counter].getName(), new StringBuffer(str.substring(0,str.length()-1)));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
+				seednum ++;
 			}
-			
-			System.out.println(seeds.size());
+			System.out.println(counter + " " + seednum);
 		}
+		/*
 		for(String s : seeds.keySet()){
 			String str = "";
 			for(String i : seeds.get(s).keySet()){
@@ -229,11 +237,12 @@ public class BWTCodeLines {
 				str += "\n";
 			}
 			try {
-				writeFileContent("F:\\data\\github\\seeds\\" + s + ".txt", new StringBuffer(str.substring(0,str.length()-1)));
+				writeFileContent("F:\\data\\github\\seeds2\\" + s + ".txt", new StringBuffer(str.substring(0,str.length()-1)));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
+		*/
 	}
 	
 	
