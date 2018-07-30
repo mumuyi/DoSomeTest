@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
+import cn.nuaa.ai.result.GetResults;
+
 public class BWTCodeLines {
 	private static List<SourceCode> codeSnippets = new ArrayList<SourceCode>();
 	private static List<List<TokenList>> FirstLastRow = new ArrayList<List<TokenList>>();
@@ -49,7 +51,9 @@ public class BWTCodeLines {
 
 		//runningDemo();
 		
-		runningDemo2();
+		//runningDemo2();
+		
+		runningDemo3();
 		
 		// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		// List<TokenList> ltl = FirstLastRow.get(1);
@@ -244,7 +248,107 @@ public class BWTCodeLines {
 		}
 		*/
 	}
-	
+
+	/**
+	 * 运行demo3;
+	 * */
+	public static void runningDemo3(){
+		long startTime = System.currentTimeMillis();//记录读取数据开始时间;
+		readCode("F:\\data\\github\\methodFormatBody\\");
+		System.out.println("read in process finished");
+		long endTime=System.currentTimeMillis();//记录读取数据结束时间;
+		System.out.println("read in time："+ 1.0 * (endTime - startTime) / 1000 + "s");
+		File directory = new File("F:\\data\\github\\results1\\");
+		File[] seedFiles = directory.listFiles();
+		List<Double> list = GetResults.getResultsList();
+		for(int counter = 0;counter < seedFiles.length;counter++){
+			System.out.println(seedFiles[counter].getName());
+			List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
+			List<TokenList> linecode = readCodeFromFile("F:\\data\\github\\methodFormatBody\\" + seedFiles[counter].getName());
+			SourceCode sc = new SourceCode();
+			
+			List<List<TokenList>> cutCode = SourceCodeCutting(linecode);
+			if(cutCode.get(0).isEmpty() && cutCode.get(1).isEmpty()){
+				System.out.println("Seed code format error");
+			}
+			if(cutCode.get(0).isEmpty()){
+				sc.setCodes(cutCode.get(1));
+				sc.setId(-1);
+				sc.setName("back seed code");
+				simiList = BWTSearch2(sc);
+				//System.out.println("1111111111111111111111111111111111");
+			}else if(cutCode.get(1).isEmpty()){
+				sc.setCodes(cutCode.get(0));
+				sc.setId(-1);
+				sc.setName("front seed code");
+				simiList = BWTSearch2(sc);
+				//System.out.println("2222222222222222222222222222222222");
+			}else{
+				SourceCode fsc = new SourceCode();
+				fsc.setCodes(cutCode.get(0));
+				fsc.setId(-1);
+				fsc.setName("front seed code");
+				
+				SourceCode bsc = new SourceCode();
+				bsc.setCodes(cutCode.get(1));
+				bsc.setId(-1);
+				bsc.setName("back seed code");
+				
+				
+				for (int i = 0; i < codeSnippets.size(); i++) {
+					SourceCode is = new SourceCode(codeSnippets.get(i));
+					double s1 = getSimilarity(new SourceCode(fsc), is);
+					double s2 = getSimilarity(new SourceCode(bsc), is);
+					Similarity2ClassIndex s2c = new Similarity2ClassIndex();
+					s2c.setClassId(i);
+					if(Math.abs(s1-s2) < 0.3){
+						s2c.setSimilarity(0.6 * s1 + 0.4 * s2);
+					}else{
+						s2c.setSimilarity(s1 > s2 ? s1 : s2);
+					}
+					simiList.add(s2c);
+
+					FirstLastRow.clear();
+				}
+				Collections.sort(simiList);
+			}
+
+			int posinum = (int)(5 * list.get(counter));
+			int falnum = 5 - posinum;
+			int posicounter = 0;
+			int falcounter = 0;
+			//System.out.println(posinum + " " + falnum);
+			String str = "";
+			
+			//for(int j = 0;j < 10;j++){
+			//	System.out.println(simiList.get(j).getSimilarity());
+			//}
+			for(int j = 0;j < simiList.size();j++){
+				//System.out.println("!!!!!!!!!!!!!");
+				if((simiList.get(j).getSimilarity() >= 0.85 || j > 1) && posicounter < posinum){
+					Similarity2ClassIndex s2c = simiList.get(j);
+					str += (insFiles[s2c.getClassId()].getName() + " " + s2c.getSimilarity());
+					str += "\n";
+					posicounter ++;
+					//System.out.println("111111111111111111111111111111111111111111111111111 " + s2c.getSimilarity());
+				}else if((simiList.get(j).getSimilarity() < 0.8 || j > 50) && falcounter < falnum){
+					Similarity2ClassIndex s2c = simiList.get(j);
+					str += (insFiles[s2c.getClassId()].getName() + " " + s2c.getSimilarity());
+					str += "\n";
+					falcounter ++;
+					//System.out.println("222222222222222222222222222222222222222222222222222 " + s2c.getSimilarity());
+				}
+				if(posicounter >= posinum && falcounter >= falnum){
+					break;
+				}
+			}
+			try {
+				writeFileContent("F:\\data\\github\\results3\\" + seedFiles[counter].getName(), new StringBuffer(str.substring(0,str.length()-1)));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 	
 	/**
 	 * 对需要查询的代码进行切割;
