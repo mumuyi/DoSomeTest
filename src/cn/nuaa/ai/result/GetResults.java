@@ -14,9 +14,43 @@ public class GetResults {
 		//statisticalResults();
 		//getResultsList();
 		//getIDCG();
-		getNDCG();
+		//getNDCG();
+		LineofCode();
 	}
 
+	/**
+	 * 统计代码行;
+	 */
+	private static long LineofCode() {
+		File directory = new File("F:\\data\\github\\methodbody\\");
+		File[] insFiles = directory.listFiles();
+		long line = 0;
+		for(int i = 0;i < insFiles.length;i++){
+			//System.out.println(insFiles[i].getName());
+			try {
+				FileReader fr = new FileReader("F:\\data\\github\\methodbody\\" + insFiles[i].getName());
+				BufferedReader br = new BufferedReader(fr);
+				String str = "";
+				while ((str = br.readLine()) != null) {
+					//System.out.println("!!!!!!!!!! " + br);
+					if(null != str && !str.equals("")&& !str.equals("\n"))
+						line++;
+				}
+				fr.close();
+				br.close();
+	
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+			}
+		}
+		System.out.println(line);
+		return line;
+	}
+	
+	
+	/**
+	 * 计算NDCG;
+	 * */
 	private static void getNDCG(){
 		double[] Ri = {0.9496416782440803,0.9100781297931501,0.9788568444022645,0.83,0.75};
 		List<Double> list = getResultsList();

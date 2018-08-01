@@ -49,11 +49,11 @@ public class BWTCodeLines {
 
 		//BWTSearch(codeSnippets.get(0));
 
-		//runningDemo();
+		runningDemo();
 		
 		//runningDemo2();
 		
-		runningDemo3();
+		//runningDemo3();
 		
 		// System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		// List<TokenList> ltl = FirstLastRow.get(1);
@@ -81,7 +81,7 @@ public class BWTCodeLines {
 		while(true){
 			startTime = System.currentTimeMillis();//记录查询开始时间;
 			
-			List<TokenList> linecode = readCodeFromFile("F:\\data\\github\\methodFormatBody\\1.txt");
+			List<TokenList> linecode = readCodeFromFile("F:\\data\\github\\methodFormatBody\\0.txt");
 			SourceCode sc = new SourceCode();
 
 			
