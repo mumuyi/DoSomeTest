@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
+import cn.nuaa.ai.SourceCodeFormat.MyFormat;
 import cn.nuaa.ai.result.GetResults;
 
 public class BWTCodeLines {
@@ -73,6 +74,7 @@ public class BWTCodeLines {
 	 * 运行demo;
 	 * */
 	public static void runningDemo(){
+		Map<String,Double> resultList = new HashMap<String,Double>();
 		long startTime = System.currentTimeMillis();//记录读取数据开始时间;
 		readCode("F:\\data\\github\\methodFormatBody\\");
 		System.out.println("read in process finished");
@@ -80,7 +82,7 @@ public class BWTCodeLines {
 		System.out.println("read in time："+ 1.0 * (endTime - startTime) / 1000 + "s");
 		while(true){
 			startTime = System.currentTimeMillis();//记录查询开始时间;
-			
+			MyFormat.formatSingleCode("0.txt");
 			List<TokenList> linecode = readCodeFromFile("F:\\data\\github\\methodFormatBody\\0.txt");
 			SourceCode sc = new SourceCode();
 
@@ -93,13 +95,13 @@ public class BWTCodeLines {
 				sc.setCodes(cutCode.get(1));
 				sc.setId(-1);
 				sc.setName("back seed code");
-				BWTSearch(sc);
+				resultList = BWTSearch(sc);
 				//System.out.println("1111111111111111111111111111111111");
 			}else if(cutCode.get(1).isEmpty()){
 				sc.setCodes(cutCode.get(0));
 				sc.setId(-1);
 				sc.setName("front seed code");
-				BWTSearch(sc);
+				resultList = BWTSearch(sc);
 				//System.out.println("2222222222222222222222222222222222");
 			}else{
 				SourceCode fsc = new SourceCode();
@@ -132,6 +134,7 @@ public class BWTCodeLines {
 				int i = 0;
 				for (Similarity2ClassIndex s2c : simiList) {
 					System.out.println(s2c.getClassId() + "  " + s2c.getSimilarity() + "   " + insFiles[s2c.getClassId()]);
+					resultList.put(insFiles[s2c.getClassId()].getName(), s2c.getSimilarity());
 					i++;
 					if (i > 11) {
 						break;
@@ -140,6 +143,11 @@ public class BWTCodeLines {
 				//System.out.println("333333333333333333333333333333333333333333");
 			}
 
+			resultList = Similarity.CodeSimilarity("0.txt", resultList);
+			resultList = Similarity.RankScore("0.txt", resultList);
+			
+			
+			
 			endTime=System.currentTimeMillis();//记录查询结束时间;
 			System.out.println("search time："+ 1.0 * (endTime - startTime) / 1000 + "s");
 			
@@ -392,7 +400,8 @@ public class BWTCodeLines {
 	/**
 	 * 在计算的过程中计算LC;
 	 */
-	public static void BWTSearch(SourceCode seed) {
+	public static Map<String,Double> BWTSearch(SourceCode seed) {
+		Map<String,Double> resultList = new HashMap<String,Double>();
 		List<Similarity2ClassIndex> simiList = new ArrayList<Similarity2ClassIndex>();
 		for (int i = 0; i < codeSnippets.size(); i++) {
 			SourceCode is = new SourceCode(codeSnippets.get(i));
@@ -407,11 +416,13 @@ public class BWTCodeLines {
 		int i = 0;
 		for (Similarity2ClassIndex s2c : simiList) {
 			System.out.println(s2c.getClassId() + "  " + s2c.getSimilarity() + "   " + insFiles[s2c.getClassId()]);
+			resultList.put(insFiles[s2c.getClassId()].getName(), s2c.getSimilarity());
 			i++;
 			if (i > 11) {
 				break;
 			}
 		}
+		return resultList;
 	}
 
 	/**
@@ -775,7 +786,7 @@ public class BWTCodeLines {
 			sc.setName(insFiles[i].getName());
 			codeSnippets.add(sc);
 
-			if(i > 2000000)
+			if(i > 200)
 				break;
 		}
 	}

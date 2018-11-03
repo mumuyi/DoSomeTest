@@ -45,7 +45,7 @@ public class MyFormat {
 	{add("int");add("long");add("short");add("float");add("double");add("String");add("byte");add("char");add("boolean");
 	add("int[]");add("long[]");add("short[]");add("float[]");add("double[]");add("String[]");add("byte[]");add("char[]");add("boolean[]");}};
 	
-	private static String fileName = "0.txt";
+	private static String fileName = "Activiti-develop@AbstractActivitiTestCase#assertAndEnsureCleanDb.txt";
 	private static String filePath= "F:\\data\\github\\methodbody\\";
 	
 	
@@ -61,10 +61,10 @@ public class MyFormat {
 		//}
 		//removeVariableDeclaration("public class TestFormatter{public static void main(String[] args){int i = 0;List<String> list = new ArrarList<String>();list.add(\"12333\");}}");
 		
+	
 		
-		/*
 		//从文件中获取源码;并对其进行格式化;
-		String code = codeFormat(addClassHead(readCodeFromFile("C:\\Users\\ai\\Desktop\\1.txt")));
+		String code = codeFormat(addClassHead(readCodeFromFile("C:\\Users\\ai\\Desktop\\0.txt")));
 		//String code = addClassHead(readCodeFromFile("F:\\data\\jarFiles\\Top100000N\\methodbody\\0.txt"));
 		//System.out.println(code);
 		//解析代码;获取变量声明信息;
@@ -108,14 +108,47 @@ public class MyFormat {
 		//clearData();
 		
 		//读取数据;
-		//readData();
-		*/
+		readData();
+		
 		
 		//formatCode();
-		
-		removeSpaceLine();
+		//readData();
+		//removeSpaceLine();
 	}
+	public static void formatSingleCode(String name){
+		fileName = name;
+		System.out.println(fileName);
+		//从文件中获取源码;并对其进行格式化;
+		String code = codeFormat(addClassHead(readCodeFromFile("F:\\data\\github\\seed\\" + fileName)));
+		
+		if(code.contains(" abstract ")){
+			return;
+		}
+		
+		
+		//System.out.println(code);
+		//解析代码;获取变量声明信息;
+		SingleFileTest(code);
 
+		//去掉源码中所有的变量声明;
+		String nCode = removeVariableDeclaration(code);
+		String oCode = nCode;
+		
+		//将变量替换为其原有类型;
+		nCode = replaceVariableName(oCode);
+		oCode = nCode;
+		
+		//去掉类结构;
+		nCode = removeClassHead(nCode);
+		oCode = nCode;
+		
+		//存储数据;
+		storeData(nCode);
+		
+		//清理数据;
+		clearData();
+	}
+	
 	public static void formatCode(){
 		File directory = new File(filePath);
 		File[] insFiles = directory.listFiles();
@@ -397,7 +430,7 @@ public class MyFormat {
 		BufferedReader br = null; // 用于包装InputStreamReader,提高处理性能。因为BufferedReader有缓冲的，而InputStreamReader没有。
 		try {
 			String str = "";
-			fis = new FileInputStream("F:\\data\\jarFiles\\Top100000N\\methodVaribleDeclaration\\" + fileName);// FileInputStream
+			fis = new FileInputStream("F:\\data\\github\\methodVaribleDeclaration\\" + fileName);// FileInputStream
 			// 从文件系统中的某个文件中获取字节
 			isr = new InputStreamReader(fis);// InputStreamReader 是字节流通向字符流的桥梁,
 			br = new BufferedReader(isr);// 从字符输入流中读取文件中的内容,封装了一个new
@@ -423,7 +456,7 @@ public class MyFormat {
 		String code = "";
 		try {
 			String str = "";
-			fis = new FileInputStream("F:\\data\\jarFiles\\Top100000N\\methodFormatBody\\" + fileName);// FileInputStream
+			fis = new FileInputStream("F:\\data\\github\\methodFormatBody\\" + fileName);// FileInputStream
 			// 从文件系统中的某个文件中获取字节
 			isr = new InputStreamReader(fis);// InputStreamReader 是字节流通向字符流的桥梁,
 			br = new BufferedReader(isr);// 从字符输入流中读取文件中的内容,封装了一个new
@@ -451,7 +484,7 @@ public class MyFormat {
 		
 		try {
 			String str = "";
-			fis = new FileInputStream("F:\\data\\jarFiles\\Top100000N\\methodVaribleDeclarationInformation\\" + fileName);// FileInputStream
+			fis = new FileInputStream("F:\\data\\github\\methodVaribleDeclarationInformation\\" + fileName);// FileInputStream
 			// 从文件系统中的某个文件中获取字节
 			isr = new InputStreamReader(fis);// InputStreamReader 是字节流通向字符流的桥梁,
 			br = new BufferedReader(isr);// 从字符输入流中读取文件中的内容,封装了一个new
@@ -476,7 +509,7 @@ public class MyFormat {
 		}
 		
 		
-        File file =new File("F:\\data\\jarFiles\\Top100000N\\methodBasicInformation\\" + fileName);
+        File file =new File("F:\\data\\github\\methodBasicInformation\\" + fileName);
         FileInputStream in;
         try {
             in = new FileInputStream(file);
