@@ -23,7 +23,16 @@ public class Similarity {
 	public static List<String> VariableTypeList = new ArrayList<String>();
 	public static Map<String, Integer> TypeMap = new HashMap<String, Integer>();
 	public static MethodDeclarationEntity methodDeclaration = new MethodDeclarationEntity();
-
+	private static final double A1=0.3;
+	private static final double A2=0.7;
+	private static final double A3=0.2;
+	private static final double A4=0.8;
+	private static final double B1=0.3;
+	private static final double B2=0.2;
+	private static final double B3=0.2;
+	private static final double B4=0.3;
+	
+	
 	private static String fileName = "Activiti-develop@AbstractActivitiTestCase#assertAndEnsureCleanDb.txt";
 
 	public static void main(String[] args) {
@@ -40,7 +49,7 @@ public class Similarity {
 			//System.out.println(filename + " " + bwtResultList.get(filename));
 			varSimi = VaribleSimilarity(seedVarType, filename);
 			//System.out.println(filename + "            " + varSimi);
-			bwtResultList.replace(filename, (varSimi * 0.2 + bwtResultList.get(filename) * 0.8));
+			bwtResultList.replace(filename, (varSimi * A1 + bwtResultList.get(filename) * A2));
 		}
 
 		System.out.println();
@@ -58,7 +67,7 @@ public class Similarity {
 		for (String filename : bwtResultList.keySet()) {
 			strSimi = StructureSimilarity(seedMDE, seedMVD, filename);
 			System.out.println(filename + " ss: " + strSimi);
-			bwtResultList.replace(filename, (strSimi * 0.2 + bwtResultList.get(filename) * 0.8));
+			bwtResultList.replace(filename, (strSimi * A3 + bwtResultList.get(filename) * A4));
 		}
 		
 		System.out.println();
@@ -75,31 +84,31 @@ public class Similarity {
 		List<String> freqMVD = readMethodVaribleDeclaration(freqName);
 		//方法名;
 		if(null != seedMDE && null != freqMDE && null != seedMDE.getMethodName() && seedMDE.getMethodName().equals(freqMDE.getMethodName())){
-			ss += 0.3;
+			ss += B1;
 		}
 		//返回值;
 		if(null != seedMDE && null != freqMDE && null != seedMDE.getMethodRetureType() && seedMDE.getMethodRetureType().equals(freqMDE.getMethodRetureType())){
-			ss += 0.2;
+			ss += B2;
 		}
 		//参数;
 		if(seedMDE.getMethodParameters().size() == 0 && freqMDE.getMethodParameters().size() == 0){
-			ss += 0.2;
+			ss += B3;
 		}else if(seedMDE.getMethodParameters().size() == 0 && freqMDE.getMethodParameters().size() > 0){
-			ss += 0.2;
+			ss += B3;
 		}else if(seedMDE.getMethodParameters().size() > 0 && freqMDE.getMethodParameters().size() == 0){
 			ss += 0.0;
 		}else{
-			ss += (0.2 * typeandvariblenamesimilarity(seedMDE.getMethodParameters(),freqMDE.getMethodParameters(),1));
+			ss += (B3 * parameterandvariblenamesimilarity(seedMDE.getMethodParameters(),freqMDE.getMethodParameters(),1));
 		}
 		//变量;
 		if(null == seedMVD && null == freqMVD){
-			ss += 0.3;
+			ss += B4;
 		}else if(null == seedMVD && null != freqMVD){
-			ss += 0.3;
+			ss += B4;
 		}else if(null != seedMVD && null == freqMVD){
 			ss += 0.0;
 		}else{
-			ss += (0.3 * typeandvariblenamesimilarity(seedMVD,freqMVD,2));
+			ss += (B4 * parameterandvariblenamesimilarity(seedMVD,freqMVD,2));
 		}		
 		
 		return ss;
@@ -125,7 +134,7 @@ public class Similarity {
 		return 1.0 * counter / seedVarType.keySet().size();
 	}
 
-	private static double typeandvariblenamesimilarity(List<String> seed, List<String> freq, int flag){
+	private static double parameterandvariblenamesimilarity(List<String> seed, List<String> freq, int flag){
 		Set<String> seedSet = new HashSet<String>();
 		Set<String> freqSet = new HashSet<String>();
 		for(String s : seed){
@@ -137,11 +146,8 @@ public class Similarity {
 					seedSet.add(ss[0]);
 				}
 			}else{
-				if(ss.length > 2){
-					seedSet.add(ss[2]);
-				}else{
-					seedSet.add(ss[1]);
-				}
+				String[] temps = ss[1].split("=");
+				seedSet.add(temps[0].replace(";", ""));
 			}
 		}
 		for(String s : freq){
@@ -153,13 +159,20 @@ public class Similarity {
 					freqSet.add(ss[0]);
 				}
 			}else{
-				if(ss.length > 2){
-					freqSet.add(ss[2]);
-				}else{
-					freqSet.add(ss[1]);
-				}
+				String[] temps = ss[1].split("=");
+				freqSet.add(temps[0].replace(";", ""));
 			}
 		}
+		
+		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+		System.out.println("varible names:");
+		for(String s : seedSet){
+			System.out.println(s);
+		}
+		for(String s : freqSet){
+			System.out.println(s);
+		}
+		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		
 		Set<String> result = new HashSet<String>();
         result.addAll(seedSet);
