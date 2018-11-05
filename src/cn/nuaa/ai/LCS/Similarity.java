@@ -164,15 +164,15 @@ public class Similarity {
 			}
 		}
 		
-		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-		System.out.println("varible names:");
-		for(String s : seedSet){
-			System.out.println(s);
-		}
-		for(String s : freqSet){
-			System.out.println(s);
-		}
-		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+		//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+		//System.out.println("varible names:");
+		//for(String s : seedSet){
+		//	System.out.println(s);
+		//}
+		//for(String s : freqSet){
+		//	System.out.println(s);
+		//}
+		//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		
 		Set<String> result = new HashSet<String>();
         result.addAll(seedSet);
