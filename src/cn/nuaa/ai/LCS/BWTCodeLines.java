@@ -98,13 +98,13 @@ public class BWTCodeLines {
 				sc.setId(-1);
 				sc.setName("back seed code");
 				resultList = BWTSearch(sc);
-				//System.out.println("1111111111111111111111111111111111");
+				System.out.println("1111111111111111111111111111111111");
 			}else if(cutCode.get(1).isEmpty()){
 				sc.setCodes(cutCode.get(0));
 				sc.setId(-1);
 				sc.setName("front seed code");
 				resultList = BWTSearch(sc);
-				//System.out.println("2222222222222222222222222222222222");
+				System.out.println("2222222222222222222222222222222222");
 			}else{
 				SourceCode fsc = new SourceCode();
 				fsc.setCodes(cutCode.get(0));
@@ -142,7 +142,7 @@ public class BWTCodeLines {
 						break;
 					}
 				}
-				//System.out.println("333333333333333333333333333333333333333333");
+				System.out.println("333333333333333333333333333333333333333333");
 			}
 
 			resultList = Similarity.CodeSimilarity("0.txt", resultList);

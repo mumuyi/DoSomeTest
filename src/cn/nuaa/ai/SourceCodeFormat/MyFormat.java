@@ -558,12 +558,17 @@ public class MyFormat {
 		for(int i = 0;i < VariableDeclarationList.size();i++){
 			str.append(VariableDeclarationList.get(i));
 		}
-		try {
-			if(str.length() > 1){
-				writeFileContent("F:\\data\\github\\methodVaribleDeclaration\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
+		if(VariableDeclarationList.size() > 0){
+			try {
+				if(str.length() > 1){
+					writeFileContent("F:\\data\\github\\methodVaribleDeclaration\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
+		}else{
+			File file = new File("F:\\data\\github\\methodVaribleDeclaration\\" + fileName);
+			file.delete();
 		}
 		//存储格式化后的方法体;
 		str = new StringBuffer(code);
@@ -577,12 +582,17 @@ public class MyFormat {
 		for(String s : TypeMap.keySet()){
 			str.append(s + " " + TypeMap.get(s) + "\n");
 		}
-		try {
-			if(str.length() > 1){
-				writeFileContent("F:\\data\\github\\methodVaribleDeclarationInformation\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
+		if(TypeMap.keySet().size() > 0){
+			try {
+				if(str.length() > 1){
+					writeFileContent("F:\\data\\github\\methodVaribleDeclarationInformation\\" + fileName,new StringBuffer(str.substring(0, str.length()-1)));
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
+		}else{
+			File file = new File("F:\\data\\github\\methodVaribleDeclarationInformation\\" + fileName);
+			file.delete();
 		}
 		//存储方法信息;
         File file =new File("F:\\data\\github\\methodBasicInformation\\" + fileName);

@@ -54,7 +54,7 @@ public class Similarity {
 
 		System.out.println();
 		for (String filename : bwtResultList.keySet()) {
-			System.out.println(filename + " " + bwtResultList.get(filename));
+			System.out.println(filename + " " + "type: "+ bwtResultList.get(filename));
 		}
 		
 		return bwtResultList;
@@ -101,11 +101,11 @@ public class Similarity {
 			ss += (B3 * parameterandvariblenamesimilarity(seedMDE.getMethodParameters(),freqMDE.getMethodParameters(),1));
 		}
 		//±äÁ¿;
-		if(null == seedMVD && null == freqMVD){
+		if((null == seedMVD && null == freqMVD) || (null != seedMVD && null != freqMVD && seedMVD.size() == 0 && freqMVD.size() == 0)){
 			ss += B4;
-		}else if(null == seedMVD && null != freqMVD){
+		}else if((null == seedMVD && null != freqMVD) || (null != seedMVD && null != freqMVD && seedMVD.size() == 0 && freqMVD.size() > 0)){
 			ss += B4;
-		}else if(null != seedMVD && null == freqMVD){
+		}else if((null != seedMVD && null == freqMVD) || (seedMVD.size() > 0 && freqMVD.size() == 0)){
 			ss += 0.0;
 		}else{
 			ss += (B4 * parameterandvariblenamesimilarity(seedMVD,freqMVD,2));
@@ -121,6 +121,9 @@ public class Similarity {
 			return 0.0;
 		}
 		if(null == freqVarType && null == seedVarType){
+			return 1.0;
+		}
+		if(null != freqVarType && null == seedVarType){
 			return 1.0;
 		}
 		for (String seeds : seedVarType.keySet()) {
